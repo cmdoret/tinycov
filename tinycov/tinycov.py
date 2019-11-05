@@ -41,7 +41,22 @@ def parse_bam(bam, chromlist, res):
 
 
 def aneuploidy_thresh(depths, ploidy=2):
-    """Compute coverage thresholds for aneuploidies based on default ploidy."""
+    """
+    Compute coverage thresholds for aneuploidies based on default ploidy.
+
+    Parameters
+    ----------
+    depth : numpy.array of floats
+        1D array of sequencing depths.
+    ploidy : int
+        The expected or known ploidy of the organism.
+
+    Returns
+    -------
+    cn_cov : dict
+        Map of ploidy to coverage thresholds. Also defines a line type
+        for each threshold (for plotting). Has the form {ploidy: [lty, thresh], ...}.
+    """
 
     med = np.nanmedian(depths)
     cn_values = np.array(range(1, (2 * ploidy) + 1), dtype=np.float)
