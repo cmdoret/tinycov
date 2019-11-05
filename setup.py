@@ -62,5 +62,5 @@ setup(
     include_package_data=True,
     install_requires=REQUIREMENTS,
     long_description_content_type="text/markdown",
-    entry_points={"console_scripts": ["tinycov=tinycov.tinycov:main"]},
+    entry_points={"console_scripts": ["tinycov=tinycov.tinycov:covplot"]},
 )

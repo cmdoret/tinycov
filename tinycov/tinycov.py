@@ -186,6 +186,5 @@ def covplot(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
     else:
         plt.show()
 
-
 if __name__ == "__main__":
     covplot()
