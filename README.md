@@ -12,6 +12,7 @@ git clone https://github.com/cmdoret/tinycov.git
 
 ### Usage
 
+```
 Usage: tinycov.py [OPTIONS] BAM
 
 Options:
@@ -31,3 +32,4 @@ Options:
                         threshold for aneuploidies
   --help                Show this message and exit.
 
+```
