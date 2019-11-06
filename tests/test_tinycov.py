@@ -1,9 +1,12 @@
+import os
 import numpy as np
 import pysam as ps
 from tinycov import parse_bam, aneuploidy_thresh, covplot, get_bp_scale
 
 TEST_BAM = "test_data/sorted.bam"
 BAD_BAM = "test_data/unsorted.bam"
+OUT_TXT = 'test_data/output.txt'
+OUT_IMG = 'test_data/output.png'
 
 def test_parse_bam():
     """
@@ -51,19 +54,59 @@ def test_covplot():
     """
     Test whether the covplot function exits normally and handles unsorted
     BAM files as well.
-    """
+    """ 
+    # Remove index and output files if present from previous runs
+    for f in [TEST_BAM + ".bai", OUT_TXT, OUT_IMG]:
+        try:
+            os.remove(f)
+        except:
+            continue
+
+    # Test sorted/not indexed and unsorted/not indexed cases
     for bam in [TEST_BAM, BAD_BAM]:
         covplot(
                 bam,
-                out="test_data/output.png",
+                out=OUT_IMG,
                 res=2000,
                 skip=10,
                 name="test_run",
                 blacklist="",
                 whitelist="",
                 ploidy=2,
-                text='test_data/output.txt'
+                text=OUT_TXT
         )
+    
+    # Check if output files have been properly generated
+    assert(os.path.isfile(OUT_TXT) == True)
+    assert(os.path.isfile(OUT_IMG) == True)
+
+    # Test sorted/indexed case (index generated in previous call)
+    # Use a whitelist and no ploidy thresholds
+    covplot(
+            bam,
+            out="test_data/output.png",
+            res=2000,
+            skip=10,
+            name="test_run",
+            blacklist="",
+            whitelist="seq2",
+            ploidy=0,
+            text='test_data/output.txt'
+    )
+
+    # Test sorted/indexed case (index generated in previous call)
+    # Use a blacklist and no output text or name
+    covplot(
+            bam,
+            out=OUT_IMG,
+            res=2000,
+            skip=10,
+            name="",
+            blacklist="seq1",
+            whitelist="",
+            ploidy=0,
+            text=''
+    )
 
 def test_get_bp_scale():
     obs = [0] * 4
