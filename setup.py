@@ -50,7 +50,8 @@ with open("tinycov/version.py", "w") as f:
 
 setup(
     name=name,
-    author="cyril.matthey-doret@pasteur.fr",
+    author="cmdoret",
+    author_email="cyril.matthey-doret@pasteur.fr",
     description=DESCRIPTION,
     long_description=LONG_DESCRIPTION,
     version=VERSION,
