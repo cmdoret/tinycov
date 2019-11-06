@@ -1,6 +1,6 @@
 import numpy as np
 import pysam as ps
-from tinycov import parse_bam, aneuploidy_thresh
+from tinycov import parse_bam, aneuploidy_thresh, covplot
 
 TEST_BAM = "test_data/for.sorted.bam"
 
@@ -44,4 +44,19 @@ def test_aneuploidy_thresh():
     # Test that output structure is {ploidy: [thresh, lty]}
     assert(isinstance(obs_diplo_dict, dict))
     assert(len(obs_diplo_dict['1N']) == 2)
+
+
+def test_covplot():
+    """Test whether the covplot function exits normally"""
+    covplot(
+            TEST_BAM,
+            out="test_data/output.png",
+            res=2000,
+            skip=10,
+            name="test_run",
+            blacklist="",
+            whitelist="",
+            ploidy=2,
+            text='test_data/output.txt'
+    )
 

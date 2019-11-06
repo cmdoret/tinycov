@@ -63,10 +63,46 @@ def aneuploidy_thresh(depths, ploidy=2):
     cov_mult = cn_values / ploidy
     ltypes = ["-", "--", "-.", ":"]
     cn_cov = {
-        f"{p}N".format(p=int(cn_values[i])): [med * mult, ltypes[i % len(ltypes)]]
+        "{p}N".format(p=int(cn_values[i])): [med * mult, ltypes[i % len(ltypes)]]
         for i, mult in enumerate(cov_mult)
     }
     return cn_cov
+
+def get_bp_scale(size):
+    """
+    Given a sequence length, compute the appropriate scale and associated suffix (bp, kb, Mb, Gb).
+
+    Parameters
+    ----------
+    size : int
+        The sequence size on which scale and suffix must be computed.
+
+    Returns
+    -------
+    scale : int
+        The number by which basepairs should be divided to achieve desired suffix.
+    suffix : str
+        The basepair unit associated with the scale.
+
+    Examples
+    --------
+    >>> get_bp_scale(45000000)
+    1000000, "Mb"
+    >>> get_bp_scale(12)
+    1, "bp"
+    """
+    # Define valid scales and associated suffixes
+    pow_to_suffix = {0: 'bp', 3: 'kb', 6: 'Mb', 9: 'Gb', 12: "Tb"}
+    # Compute power scale of genome
+    genome_len_pow = int(np.log10(size))
+    # Get the closest valid power below genome size
+    sorted_pows = sorted(pow_to_suffix.keys())
+    valid_pow_idx = max(0, np.searchsorted(sorted_pows, genome_len_pow) - 1)
+    genome_valid_pow = sorted_pows[valid_pow_idx]
+    # Convert power to scale and associated suffix
+    suffix = pow_to_suffix[genome_valid_pow]
+    scale = 10**genome_valid_pow
+    return scale, suffix
 
 
 @click.command()
@@ -125,21 +161,15 @@ def aneuploidy_thresh(depths, ploidy=2):
 def covplot_cmd(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
     covplot(bam, out, res=res, skip=skip, name=name, blacklist=blacklist, whitelist=whitelist, ploidy=ploidy, text=text)
 
-def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='', ploidy=2, text='')
+def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='', ploidy=2, text=''):
     click.echo("Visualise read coverage in rolling windows from a bam file.")
     sns.set_style("white")
     bam_handle = ps.Samfile(bam)
     blacklist = blacklist.split(",")
     whitelist = whitelist.split(",")
     chromlist = []
-    # Define valid scales and associated suffixes
-    pow_to_suffix = {1: 'bp', 3: 'kbp', 6: 'Mbp', 9: 'Gbp'}
-    # Compute power scale of genome
-    genome_len_pow = int(np.log10(sum(list(bam_handle.lengths))))
-    # Get the closest valid power below
-    genome_valid_pow = np.searchsorted(sorted(pow_to_suffix.keys()), genome_len_pow) - 1
-    suffix = pow_to_suffix[genome_valid_pow]
-    scale = 10^genome_valid_pow
+    genome_len = sum(list(bam_handle.lengths))
+    scale, suffix = get_bp_scale(genome_len)
     if len(whitelist[0]):
         chromlist = whitelist
     else:
@@ -203,7 +233,9 @@ def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='',
     plt.xlabel("Genomic position [%s]" % suffix)
     # plt.legend()
     plt.gca().set_ylim([min_count, 1.1 * max_count])
-    plt.ylabel("coverage ({%i}-bp averaged)" % res)
+    res_scale, res_suffix = get_bp_scale(res)
+    res_str = "%d %s" % (res / res_scale, res_suffix)
+    plt.ylabel("coverage (%s averaged)" % res_str)
     plt.gca().set_xlim([0, offset[-1] / scale])
     if len(name) == 0:
         name = os.path.splitext(os.path.basename(bam))[0]
@@ -215,4 +247,4 @@ def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='',
         plt.show()
 
 if __name__ == "__main__":
-    covplot()
+    covplot_cmd()
