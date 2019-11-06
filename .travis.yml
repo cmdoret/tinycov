@@ -11,17 +11,13 @@ matrix:
     sudo: true
 os:
 - linux
-
 install:
 - pip install -v -r requirements.txt
 - pip install codecov
-
 script:
 - nosetests --with-coverage tests/test_tinycov.py
-
 after_success:
 - codecov
-
 deploy:
   on:
     branch: master
@@ -30,5 +26,5 @@ deploy:
   skip_existing: true
   user: cmdoret
   password:
-    secure: gEc/Mf+t8lGlStSuCuQOIxLPXDaTzB42faB125+Sb9UMqIJr1slS9tKU7lqxRNgsH+40e9/lThSVVCggBUUzL6Gbhqa9IvI0IA9A71v9ohV5bbewDRoD+IJjNnCCj/Yj8H53rqticgtfb+QBHuyU7KHGxcTP8s55Yro/5WhwXl5XexvPYaafelv3ibZyvA0pXos48bD/emuedQhmOWLtkXhkH3CRVsyG3dqXIDK4h/4jqOE+VxclCBiYbCrRGbyuDeYLVQ82OyUL4QQQbnr7e2ejDRlgOiQODCU/ekU9pgDoSqVSvloehJffsBbqK4iKojDX2WrUu1KtXRuA8gSXcS3993wh1ppCEJZ05pgFnuht+PSc+SFca9HBP68iCowlGqmPmHumug62/QPtoUyqB83s/EYdoOI8TX8MhJK5bxnUnpT+PWLBey2CcFVZlYyWmNuFZgZBkkM07DNhfPqazgtx8NTQUZMYhmPjQYHszqfEjBanmAMCy8WbiflmkBRaXkhqPJH4h5GAVtbEbv1E1/B8J2CO6i9hPLWdohZ6vqzViubFlC69QUO1fnejReL21BduF6fkOhGXzOkaMA32NdhYGQACkNO9zKdOl6PnZl8xobusL0Hbkicz2mga+kozFAPChlTTln6GPgorRhmSv2DpJV7WrzRaGU0lVVy5PhA=
+    secure: JEwI185k27GlkN8SnBGR6eFZ7uwTT9xxNKfi9Ajzpe88hSBEZOusfGFXGtBUHhkktNKxzyy3xzXgMjtTcpl9zeFdjFHGF8L+1F6RZq3L6bVOotppHQzPiJtxF/3HkWxJxKu7ISpjykPvK8Oplg28pdRrXa+L6PXG3InIq+BOtOfj644P8clJKi/n6B30dldgZcWfIhYwaq6VErDKmUU9KULhFO9V6imMipL4xnPve9Pb82xOyCMOlki8QyPVtda148cXBFD1w5IUqzqWRcAIjr7QP3UfirEtXJVGFKPcKzkwjHFPqpM24qlBcHhnTdyvZAgj4IITmIOyAoh88p8p74TRULbKEOe4xU7g7N6YvQCAeAuERsn6lIVqdRm3Ui9gc/ouai3xqFdSPKEi1yrd2e+t2iai8t9eGdprqOecHriLWseNpK9gchC49kTcvXUVpOS7Zs8bR1ceRt12e+A8pD+dRYp2QH/irmHTBZcgraWbk+HsCPaYy2LNYWO8o42nTQE0GXZY3XoQPLUPU/sguNQMVJQWJiD6CnitEZLhf1nWeN+BLaNE3xvy81tFCQjfegm6bPc/BvZ0LGHoAjiJXypd3BvWkKc7Iqr9oCG78o5OHAcwcVnl8nKIELPJQY5jaVpal6wBdA9kSSNzG0NNVOFRuRn0zakwkPAiWYnL/bs=
   distributions: sdist bdist_wheel
