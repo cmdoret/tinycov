@@ -70,7 +70,6 @@ def test_get_bp_scale():
     for i, size in enumerate([17, 180, 14000, 150870320]):
         obs[i] = get_bp_scale(size)
     exp = [(1, 'bp'), (1, 'bp'), (1000, 'kb'), (1000000, "Mb")]
-    print(obs)
     for o, e in zip(obs, exp):
         assert(o == e)
 

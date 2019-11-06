@@ -205,7 +205,7 @@ def get_bp_scale(size):
     "--ploidy",
     "-p",
     default=2,
-    help="Ploidy of input sample, used to estimate coverage threshold for aneuploidies",
+    help="Ploidy of input sample, used to estimate coverage threshold for aneuploidies. Setting to 0 disables estimations.",
 )
 @click.version_option(
     version=__version__,
@@ -278,15 +278,17 @@ def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='',
             chrom,
             size=10,
         )
-    aneuploidies = aneuploidy_thresh(all_depths, ploidy)
-    for aneup, cov in aneuploidies.items():
-        if aneup == str(ploidy) + "N":
-            lw = 2
-            color = "green"
-        else:
-            lw = 1
-            color = "grey"
-        plt.axhline(y=cov[0], label=aneup, ls=cov[1], lw=lw, color=color, alpha=0.5)
+    if ploidy > 0:
+        aneuploidies = aneuploidy_thresh(all_depths, ploidy)
+        for aneup, cov in aneuploidies.items():
+            if aneup == str(ploidy) + "N":
+                lw = 2
+                color = "green"
+            else:
+                lw = 1
+                color = "grey"
+            plt.axhline(y=cov[0], label=aneup, ls=cov[1], lw=lw, color=color, alpha=0.5)
+        plt.legend()
     plt.xlabel("Genomic position [%s]" % suffix)
     # plt.legend()
     plt.gca().set_ylim([min_count, 1.1 * max_count])
@@ -297,7 +299,6 @@ def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='',
     if len(name) == 0:
         name = os.path.splitext(os.path.basename(bam))[0]
     plt.title(name)
-    plt.legend()
     if len(out):
         plt.savefig(out)
     else:
