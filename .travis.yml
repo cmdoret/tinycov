@@ -14,10 +14,12 @@ os:
 
 install:
 - pip install -v -r requirements.txt
+- pip install codecov
 
 script:
-  - nosetests tests/test_tinycov.py
+  - nosetests --with-coverage tests/test_tinycov.py
 after_success:
+  - codecov
   deploy:
     on: 
       branch: master
