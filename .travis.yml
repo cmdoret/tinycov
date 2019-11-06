@@ -21,7 +21,7 @@ install:
 - conda config --add channels bioconda
 - conda update -q conda
 - conda info -a
-- conda create -c conda-forge -q -n test-environment python="$TRAVIS_PYTHON_VERSION" samtools  htslib  pysam
+- conda create -c conda-forge -q -n test-environment python="$TRAVIS_PYTHON_VERSION" samtools  htslib
 - conda activate test-environment
 - pip install -Ur requirements.txt
 
