@@ -30,7 +30,7 @@ name = "tinycov"
 
 MAJOR = 0
 MINOR = 0
-MAINTENANCE = 5
+MAINTENANCE = 7
 VERSION = "{}.{}.{}".format(MAJOR, MINOR, MAINTENANCE)
 
 LICENSE = "MIT"

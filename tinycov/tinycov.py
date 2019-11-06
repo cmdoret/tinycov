@@ -213,7 +213,7 @@ def get_bp_scale(size):
 @click.argument("bam", type=click.Path(exists=True))
 def covplot_cmd(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
     click.echo("Visualise read coverage in rolling windows from a bam file.")
-    covplot(bam, out="", res=res, skip=skip, name=name, blacklist=blacklist, whitelist=whitelist, ploidy=ploidy, text=text)
+    covplot(bam, out=out, res=res, skip=skip, name=name, blacklist=blacklist, whitelist=whitelist, ploidy=ploidy, text=text)
 
 def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='', ploidy=2, text=''):
     sns.set_style("white")
