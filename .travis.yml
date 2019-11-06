@@ -13,7 +13,7 @@ os:
 - linux
 
 install:
-- pip install -v --user -Ur requirements.txt
+- pip install -v -r requirements.txt
 
 script:
   - nosetests tests/test_tinycov.py
