@@ -34,7 +34,7 @@ def check_gen_sort_index(bam, cores=4):
     def check_bam_sorted(path):
         """Checks whether target BAM file is coordinate-sorted"""
         header = ps.view(path, "-H")
-        if header.count('SO:coordinate') == 1:
+        if header.count("SO:coordinate") == 1:
             issorted = True
         else:
             issorted = False
@@ -50,7 +50,7 @@ def check_gen_sort_index(bam, cores=4):
         # Make a new sorted BAM file and store name for indexing
         if not check_bam_sorted(bam_path):
             sorted_bam = os.path.splitext(bam_path)[0] + ".sorted.bam"
-            print("Saving a coordinate-sorted BAM file as ", sorted_bam) 
+            print("Saving a coordinate-sorted BAM file as ", sorted_bam)
             ps.sort(bam_path, "-O", "BAM", "-@", str(cores), "-o", sorted_bam)
         else:
             sorted_bam = bam_path
@@ -59,6 +59,7 @@ def check_gen_sort_index(bam, cores=4):
         ps.index("-@", str(cores), sorted_bam)
 
     return sorted_bam
+
 
 def parse_bam(bam, chromlist, res):
     """
@@ -118,6 +119,7 @@ def aneuploidy_thresh(depths, ploidy=2):
     }
     return cn_cov
 
+
 def get_bp_scale(size):
     """
     Given a sequence length, compute the appropriate scale and associated suffix (bp, kb, Mb, Gb).
@@ -142,7 +144,7 @@ def get_bp_scale(size):
     1, "bp"
     """
     # Define valid scales and associated suffixes
-    pow_to_suffix = {0: 'bp', 3: 'kb', 6: 'Mb', 9: 'Gb', 12: "Tb"}
+    pow_to_suffix = {0: "bp", 3: "kb", 6: "Mb", 9: "Gb", 12: "Tb"}
     # Compute power scale of genome
     genome_len_pow = int(np.log10(size))
     # Get the closest valid power below genome size
@@ -151,7 +153,7 @@ def get_bp_scale(size):
     genome_valid_pow = sorted_pows[valid_pow_idx]
     # Convert power to scale and associated suffix
     suffix = pow_to_suffix[genome_valid_pow]
-    scale = 10**genome_valid_pow
+    scale = 10 ** genome_valid_pow
     return scale, suffix
 
 
@@ -195,9 +197,10 @@ def get_bp_scale(size):
     help="Output file where to write the plot. If not provided, the plot is shown interactively",
     type=click.Path(exists=False),
 )
-@click.option('-t',
-    '--text',
-    default='',
+@click.option(
+    "-t",
+    "--text",
+    default="",
     help="Output file where to write the raw data table.",
     type=click.Path(exists=False),
 )
@@ -207,15 +210,34 @@ def get_bp_scale(size):
     default=2,
     help="Ploidy of input sample, used to estimate coverage threshold for aneuploidies. Setting to 0 disables estimations.",
 )
-@click.version_option(
-    version=__version__,
-)
+@click.version_option(version=__version__)
 @click.argument("bam", type=click.Path(exists=True))
 def covplot_cmd(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
     click.echo("Visualise read coverage in rolling windows from a bam file.")
-    covplot(bam, out=out, res=res, skip=skip, name=name, blacklist=blacklist, whitelist=whitelist, ploidy=ploidy, text=text)
+    covplot(
+        bam,
+        out=out,
+        res=res,
+        skip=skip,
+        name=name,
+        blacklist=blacklist,
+        whitelist=whitelist,
+        ploidy=ploidy,
+        text=text,
+    )
 
-def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='', ploidy=2, text=''):
+
+def covplot(
+    bam,
+    out,
+    res=10000,
+    skip=1000,
+    name="",
+    blacklist="",
+    whitelist="",
+    ploidy=2,
+    text="",
+):
     sns.set_style("white")
     # Load BAM file, sort and index if needed
     bam_handle = ps.Samfile(bam)
@@ -236,24 +258,24 @@ def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='',
                 chromlist.remove(chrom)
     all_depths = []
     if text:
-        text_out = open(text, 'w')
+        text_out = open(text, "w")
     with sns.color_palette("husl", bam_handle.nreferences):
         min_count, max_count = 0, 0
         offset, chrom_id = np.zeros(len(chromlist) + 1), 0
         for chrom, length, counts in parse_bam(bam_handle, chromlist, res):
-            coverage = counts[counts.columns[0]].values[::skip] 
+            coverage = counts[counts.columns[0]].values[::skip]
             centers = counts.index.values[::skip]
-            plt.plot(
-                ( centers + offset[chrom_id]) / scale, coverage,
-                ".",
-            )
+            plt.plot((centers + offset[chrom_id]) / scale, coverage, ".")
             # Write data as text, if requested
             if text:
                 for bp, cov in zip(centers, coverage):
                     if not np.isnan(cov):
                         text_out.write(
-                            '{chrom}\t{start}\t{end}\t{cov}\n'.format(
-                                chrom=chrom, start=bp-res//2, end=bp+res//2, cov=cov
+                            "{chrom}\t{start}\t{end}\t{cov}\n".format(
+                                chrom=chrom,
+                                start=bp - res // 2,
+                                end=bp + res // 2,
+                                cov=cov,
                             )
                         )
             highest = np.max(counts.iloc[::skip, 0])
@@ -303,6 +325,7 @@ def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='',
         plt.savefig(out)
     else:
         plt.show()
+
 
 if __name__ == "__main__":
     covplot_cmd()

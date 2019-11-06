@@ -1,5 +1,5 @@
 ### tinycov
-[![PyPI version](https://badge.fury.io/py/tinycov.svg)](https://badge.fury.io/py/tinycov) [![Build Status](https://travis-ci.com/cmdoret/tinycov.svg?branch=master)](https://travis-ci.com/cmdoret/tinycov) [![codecov](https://codecov.io/gh/cmdoret/tinycov/branch/master/graph/badge.svg)](https://codecov.io/gh/cmdoret/tinycov)
+[![PyPI version](https://badge.fury.io/py/tinycov.svg)](https://badge.fury.io/py/tinycov) [![Build Status](https://travis-ci.com/cmdoret/tinycov.svg?branch=master)](https://travis-ci.com/cmdoret/tinycov) [![codecov](https://codecov.io/gh/cmdoret/tinycov/branch/master/graph/badge.svg)](https://codecov.io/gh/cmdoret/tinycov) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 Tinycov is a small standalone command line utility written in python to plot the coverage of a BAM file quickly.
 This software was inspired by [Matt Edwards' genome coverage plotter](https://github.com/matted/genome_coverage_plotter).
