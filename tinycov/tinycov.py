@@ -10,10 +10,59 @@ import pysam as ps
 import click
 
 
+def check_gen_sort_index(bam, cores=4):
+    """
+    Index the input BAM file if needed. If the file is not coordinate-sorted,
+    generate a sorted file. Returns the path to the sorted-indexed BAM file.
+    Does nothing and return input file path if it was already indexed and
+    coordinate-sorted.
+
+    Parameters
+    ----------
+    bam : pysam.AlignmentFile
+        Handle to the BAM file to index.
+    cores : int
+        Number of CPU cores to use for sorting.
+
+    Returns
+    -------
+    sorted_bam : str
+        The path to the sorted indexed BAM file
+    """
+
+    def check_bam_sorted(path):
+        """Checks whether target BAM file is coordinate-sorted"""
+        header = ps.view(path, "-H")
+        if header.count('SO:coordinate') == 1:
+            issorted = True
+        else:
+            issorted = False
+        return issorted
+
+    bam_path = bam.filename.decode()
+
+    try:
+        # If the file has an index, there is nothing to do
+        bam.check_index()
+        sorted_bam = bam_path
+    except ValueError:
+        # Make a new sorted BAM file and store name for indexing
+        if not check_bam_sorted(bam_path):
+            sorted_bam = os.path.splitext(bam_path)[0] + ".sorted.bam"
+            print("Saving a coordinate-sorted BAM file as ", sorted_bam) 
+            ps.sort(bam_path, "-O", "BAM", "-@", str(cores), "-o", sorted_bam)
+        else:
+            sorted_bam = bam_path
+        # Index the sorted BAM file (input file if it was sorted)
+        print("Indexing BAM file")
+        ps.index("-@", str(cores), sorted_bam)
+
+    return sorted_bam
+
 def parse_bam(bam, chromlist, res):
     """
-    Parse input bam file and yield chromosomes one by one along with a
-    rolling window mean of coverage.
+    Parse input indexed, coordinte-sorted bam file and yield chromosomes 
+    one by one along with a rolling window mean of coverage.
 
     Parameters
     ----------
@@ -159,12 +208,16 @@ def get_bp_scale(size):
 )
 @click.argument("bam", type=click.Path(exists=True))
 def covplot_cmd(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
-    covplot(bam, out, res=res, skip=skip, name=name, blacklist=blacklist, whitelist=whitelist, ploidy=ploidy, text=text)
+    click.echo("Visualise read coverage in rolling windows from a bam file.")
+    covplot(bam, out="", res=res, skip=skip, name=name, blacklist=blacklist, whitelist=whitelist, ploidy=ploidy, text=text)
 
 def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='', ploidy=2, text=''):
-    click.echo("Visualise read coverage in rolling windows from a bam file.")
     sns.set_style("white")
+    # Load BAM file, sort and index if needed
     bam_handle = ps.Samfile(bam)
+    processed_bam = check_gen_sort_index(bam_handle)
+    # Reload processed BAM file
+    bam_handle = ps.Samfile(processed_bam)
     blacklist = blacklist.split(",")
     whitelist = whitelist.split(",")
     chromlist = []

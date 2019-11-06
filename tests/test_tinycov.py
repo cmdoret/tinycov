@@ -2,7 +2,8 @@ import numpy as np
 import pysam as ps
 from tinycov import parse_bam, aneuploidy_thresh, covplot
 
-TEST_BAM = "test_data/for.sorted.bam"
+TEST_BAM = "test_data/sorted.bam"
+BAD_BAM = "test_data/unsorted.bam"
 
 def test_parse_bam():
     """
@@ -47,16 +48,20 @@ def test_aneuploidy_thresh():
 
 
 def test_covplot():
-    """Test whether the covplot function exits normally"""
-    covplot(
-            TEST_BAM,
-            out="test_data/output.png",
-            res=2000,
-            skip=10,
-            name="test_run",
-            blacklist="",
-            whitelist="",
-            ploidy=2,
-            text='test_data/output.txt'
-    )
+    """
+    Test whether the covplot function exits normally and handles unsorted
+    BAM files as well.
+    """
+    for bam in [TEST_BAM, BAD_BAM]:
+        covplot(
+                bam,
+                out="test_data/output.png",
+                res=2000,
+                skip=10,
+                name="test_run",
+                blacklist="",
+                whitelist="",
+                ploidy=2,
+                text='test_data/output.txt'
+        )
 
