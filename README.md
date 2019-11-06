@@ -10,6 +10,16 @@ git clone https://github.com/cmdoret/tinycov.git
 
 > TODO: Distribute as a package on Pypi
 
+### Input
+
+Only a [BAM](https://www.htslib.org/) file alignment is required as input. If it is not coordinate-sorted, tinycov will make a sorted copy named `input.sorted.bam` if the file is named `input.bam`.
+
+### Output
+
+If no output is provided, the coverage plot will be displayed interactively using matplotlib. If `--out` is used, the plot will be saved in a format determined by the output file's extension.
+
+Additionally, if `--text` is provided, an output text file will be saved in the [bedgraph](https://genome.ucsc.edu/goldenPath/help/bedgraph.html) format with overlapping windows (depending on the values of `--res` and `--skip`).
+
 ### Usage
 
 ```
