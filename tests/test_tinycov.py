@@ -1,6 +1,6 @@
 import numpy as np
 import pysam as ps
-from tinycov import parse_bam, aneuploidy_thresh, covplot
+from tinycov import parse_bam, aneuploidy_thresh, covplot, get_bp_scale
 
 TEST_BAM = "test_data/sorted.bam"
 BAD_BAM = "test_data/unsorted.bam"
@@ -64,4 +64,13 @@ def test_covplot():
                 ploidy=2,
                 text='test_data/output.txt'
         )
+
+def test_get_bp_scale():
+    obs = [0] * 4
+    for i, size in enumerate([17, 180, 14000, 150870320]):
+        obs[i] = get_bp_scale(size)
+    exp = [(1, 'bp'), (1, 'bp'), (1000, 'kb'), (1000000, "Mb")]
+    print(obs)
+    for o, e in zip(obs, exp):
+        assert(o == e)
 
