@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pysam as ps
 import click
+from tinycov.version import __version__
 
 
 def check_gen_sort_index(bam, cores=4):
@@ -205,6 +206,9 @@ def get_bp_scale(size):
     "-p",
     default=2,
     help="Ploidy of input sample, used to estimate coverage threshold for aneuploidies",
+)
+@click.version_option(
+    version=__version__,
 )
 @click.argument("bam", type=click.Path(exists=True))
 def covplot_cmd(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
