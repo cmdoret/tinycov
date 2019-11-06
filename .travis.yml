@@ -23,7 +23,7 @@ install:
 - conda info -a
 - conda create -c conda-forge -q -n test-environment python="$TRAVIS_PYTHON_VERSION" samtools  htslib
 - conda activate test-environment
-- pip install -Ur requirements.txt
+- pip install -vv --user -Ur requirements.txt
 
 script:
   - nosetests tests/test_tinycov.py
