@@ -63,7 +63,7 @@ def aneuploidy_thresh(depths, ploidy=2):
     cov_mult = cn_values / ploidy
     ltypes = ["-", "--", "-.", ":"]
     cn_cov = {
-        f"{int(cn_values[i])}N": [med * mult, ltypes[i % len(ltypes)]]
+        f"{p}N".format(p=int(cn_values[i])): [med * mult, ltypes[i % len(ltypes)]]
         for i, mult in enumerate(cov_mult)
     }
     return cn_cov
@@ -122,15 +122,24 @@ def aneuploidy_thresh(depths, ploidy=2):
     help="Ploidy of input sample, used to estimate coverage threshold for aneuploidies",
 )
 @click.argument("bam", type=click.Path(exists=True))
-def covplot(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
+def covplot_cmd(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
+    covplot(bam, out, res=res, skip=skip, name=name, blacklist=blacklist, whitelist=whitelist, ploidy=ploidy, text=text)
+
+def covplot(bam, out, res=10000, skip=1000, name='', blacklist='', whitelist='', ploidy=2, text='')
     click.echo("Visualise read coverage in rolling windows from a bam file.")
     sns.set_style("white")
-    # Factor for representing basepairs (1000 for kb)
-    scale = 1000
     bam_handle = ps.Samfile(bam)
     blacklist = blacklist.split(",")
     whitelist = whitelist.split(",")
     chromlist = []
+    # Define valid scales and associated suffixes
+    pow_to_suffix = {1: 'bp', 3: 'kbp', 6: 'Mbp', 9: 'Gbp'}
+    # Compute power scale of genome
+    genome_len_pow = int(np.log10(sum(list(bam_handle.lengths))))
+    # Get the closest valid power below
+    genome_valid_pow = np.searchsorted(sorted(pow_to_suffix.keys()), genome_len_pow) - 1
+    suffix = pow_to_suffix[genome_valid_pow]
+    scale = 10^genome_valid_pow
     if len(whitelist[0]):
         chromlist = whitelist
     else:
@@ -155,7 +164,11 @@ def covplot(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
             if text:
                 for bp, cov in zip(centers, coverage):
                     if not np.isnan(cov):
-                        text_out.write(f'{chrom}\t{bp-res//2}\t{bp+res//2}\t{cov}\n')
+                        text_out.write(
+                            '{chrom}\t{start}\t{end}\t{cov}\n'.format(
+                                chrom=chrom, start=bp-res//2, end=bp+res//2, cov=cov
+                            )
+                        )
             highest = np.max(counts.iloc[::skip, 0])
             lowest = np.min(counts.iloc[::skip, 0])
             if lowest < min_count:
@@ -187,10 +200,10 @@ def covplot(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
             lw = 1
             color = "grey"
         plt.axhline(y=cov[0], label=aneup, ls=cov[1], lw=lw, color=color, alpha=0.5)
-    plt.xlabel("kb")
+    plt.xlabel("Genomic position [%s]" % suffix)
     # plt.legend()
     plt.gca().set_ylim([min_count, 1.1 * max_count])
-    plt.ylabel(f"coverage ({res}-bp averaged)")
+    plt.ylabel("coverage ({%i}-bp averaged)" % res)
     plt.gca().set_xlim([0, offset[-1] / scale])
     if len(name) == 0:
         name = os.path.splitext(os.path.basename(bam))[0]
