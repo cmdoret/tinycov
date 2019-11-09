@@ -61,7 +61,7 @@ def check_gen_sort_index(bam, cores=4):
     return sorted_bam
 
 
-def parse_bam(bam, chromlist, res):
+def parse_bam(bam, chromlist, res, bins=None):
     """
     Parse input indexed, coordinte-sorted bam file and yield chromosomes 
     one by one along with a rolling window mean of coverage.
@@ -72,10 +72,16 @@ def parse_bam(bam, chromlist, res):
         A pysam file handle to an alignment file.
     chromlist : list of str
         A list of chromosome names to include in the analysis.
+    res : int
+        Number of bases to include in each window.
+    bins : pandas.DataFrame, optional
+        Predefined window segmentation in the case of variable-size windows.
+        Will override res if used. The dataframe should have columns: "chrom",
+        "start" and "end"
 
     Returns
     -------
-    generator of str, int, pandas.Series
+    generator of str, int, pandas.DataFrame
         For each element in the generator, there are 3 values: The chromosome
         name, its length and an array of rolling coverage values.
     """
@@ -88,7 +94,21 @@ def parse_bam(bam, chromlist, res):
                 except AttributeError:
                     depths[base.pos] += len(base.pileups)
             df = pd.DataFrame(depths, index=np.arange(length + 1), columns=["depth"])
-            yield chromo, length, df.rolling(window=res, center=True).mean()
+            # If resolution is fixed, use pandas's method for rolling windows
+            if bins is None:
+                yield chromo, length, df.rolling(window=res, center=True).mean()
+            # If using a custom binning, compute each window independently
+            else:
+                chrom_bins = bins.loc[bins.chrom == chromo, :]
+                wins = np.zeros(chrom_bins.shape[0])
+                # TODO: Use a faster trick (df.groupby ?)
+                # TODO: Ensure windows are centered, test if results are identical to
+                # fixed res
+                for i, (s, e) in enumerate(zip(chrom_bins.start, chrom_bins.end)):
+                    wins[i] = df.depth[s:e].mean()
+                yield chromo, length, pd.DataFrame(wins)
+
+                
 
 
 def aneuploidy_thresh(depths, ploidy=2):
@@ -173,6 +193,13 @@ def get_bp_scale(size):
     show_default=True,
 )
 @click.option(
+    "--bins",
+    "-B",
+    default=None,
+    help="Tab-separated file of three columns (chromosome, start, end) without header containing a custom binning to use. Overrides --res and --skip, optional.",
+    show_default=False,
+)
+@click.option(
     "--name",
     "-n",
     default="",
@@ -212,12 +239,13 @@ def get_bp_scale(size):
 )
 @click.version_option(version=__version__)
 @click.argument("bam", type=click.Path(exists=True))
-def covplot_cmd(bam, out, res, skip, name, blacklist, whitelist, ploidy, text):
+def covplot_cmd(bam, out, res, bins, skip, name, blacklist, whitelist, ploidy, text):
     click.echo("Visualise read coverage in rolling windows from a bam file.")
     covplot(
         bam,
         out=out,
         res=res,
+        bins=bins,
         skip=skip,
         name=name,
         blacklist=blacklist,
@@ -231,6 +259,7 @@ def covplot(
     bam,
     out,
     res=10000,
+    bins=None,
     skip=1000,
     name="",
     blacklist="",
@@ -257,27 +286,50 @@ def covplot(
             for chrom in blacklist:
                 chromlist.remove(chrom)
     all_depths = []
+    if bins is not None:
+        # Cannot skip windows if using custom binning
+        skip = 1
+        bins = pd.read_csv(
+                bins,
+                sep='\t',
+                header=None,
+                names=['chrom', 'start', 'end']
+        )
     if text:
         text_out = open(text, "w")
     with sns.color_palette("husl", bam_handle.nreferences):
         min_count, max_count = 0, 0
         offset, chrom_id = np.zeros(len(chromlist) + 1), 0
-        for chrom, length, counts in parse_bam(bam_handle, chromlist, res):
+        for chrom, length, counts in parse_bam(bam_handle, chromlist, res, bins):
             coverage = counts[counts.columns[0]].values[::skip]
-            centers = counts.index.values[::skip]
+            if bins is None:
+                centers = counts.index.values[::skip]
+            else:
+                chrom_bins = bins.loc[bins.chrom == chrom, :]
+                chrom_bins['depth'] = coverage
+                centers = (chrom_bins.start + chrom_bins.end) / 2
             plt.plot((centers + offset[chrom_id]) / scale, coverage, ".")
             # Write data as text, if requested
             if text:
-                for bp, cov in zip(centers, coverage):
-                    if not np.isnan(cov):
-                        text_out.write(
-                            "{chrom}\t{start}\t{end}\t{cov}\n".format(
-                                chrom=chrom,
-                                start=bp - res // 2,
-                                end=bp + res // 2,
-                                cov=cov,
+                if bins is None:
+                    for bp, cov in zip(centers, coverage):
+                        if not np.isnan(cov):
+                            text_out.write(
+                                "{chrom}\t{start}\t{end}\t{cov}\n".format(
+                                    chrom=chrom,
+                                    start=bp - res // 2,
+                                    end=bp + res // 2,
+                                    cov=cov,
+                                )
                             )
-                        )
+                else:
+                    chrom_bins.to_csv(
+                        text_out,
+                        mode='a',
+                        sep='\t',
+                        header=None,
+                        index=False
+                    )
             highest = np.max(counts.iloc[::skip, 0])
             lowest = np.min(counts.iloc[::skip, 0])
             if lowest < min_count:
@@ -314,8 +366,11 @@ def covplot(
     plt.xlabel("Genomic position [%s]" % suffix)
     # plt.legend()
     plt.gca().set_ylim([min_count, 1.1 * max_count])
-    res_scale, res_suffix = get_bp_scale(res)
-    res_str = "%d %s" % (res / res_scale, res_suffix)
+    if bins is None:
+        res_scale, res_suffix = get_bp_scale(res)
+        res_str = "%d %s" % (res / res_scale, res_suffix)
+    else:
+        res_str = "variable size windows"
     plt.ylabel("coverage (%s averaged)" % res_str)
     plt.gca().set_xlim([0, offset[-1] / scale])
     if len(name) == 0:
