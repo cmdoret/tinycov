@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pysam as ps
 import click
-from tinycov.version import __version__
 
 
 def check_gen_sort_index(bam, cores=4):
@@ -177,82 +176,6 @@ def get_bp_scale(size):
     return scale, suffix
 
 
-@click.command()
-@click.option(
-    "--res",
-    "-r",
-    default=10000,
-    help="Size of windows in which to compute coverage, in basepairs.",
-    show_default=True,
-)
-@click.option(
-    "--skip",
-    "-s",
-    default=1000,
-    help="Stride between windows, in basepairs.",
-    show_default=True,
-)
-@click.option(
-    "--bins",
-    "-B",
-    default=None,
-    help="Tab-separated file of three columns (chromosome, start, end) without header containing a custom binning to use. Overrides --res and --skip, optional.",
-    show_default=False,
-)
-@click.option(
-    "--name",
-    "-n",
-    default="",
-    help="Name of the sample (plot title). Base name of input file by default",
-)
-@click.option(
-    "--blacklist",
-    "-b",
-    default="",
-    help="Exclude those chromosomes from the plot. List of comma-separated chromosome names.",
-)
-@click.option(
-    "--whitelist",
-    "-w",
-    default="",
-    help="Only include those chromosomes in the plot. List of comma-separated chromosome names.",
-)
-@click.option(
-    "--out",
-    "-o",
-    default="",
-    help="Output file where to write the plot. If not provided, the plot is shown interactively",
-    type=click.Path(exists=False),
-)
-@click.option(
-    "-t",
-    "--text",
-    default="",
-    help="Output file where to write the raw data table.",
-    type=click.Path(exists=False),
-)
-@click.option(
-    "--ploidy",
-    "-p",
-    default=2,
-    help="Ploidy of input sample, used to estimate coverage threshold for aneuploidies. Setting to 0 disables estimations.",
-)
-@click.version_option(version=__version__)
-@click.argument("bam", type=click.Path(exists=True))
-def covplot_cmd(bam, out, res, bins, skip, name, blacklist, whitelist, ploidy, text):
-    click.echo("Visualise read coverage in rolling windows from a bam file.")
-    covplot(
-        bam,
-        out=out,
-        res=res,
-        bins=bins,
-        skip=skip,
-        name=name,
-        blacklist=blacklist,
-        whitelist=whitelist,
-        ploidy=ploidy,
-        text=text,
-    )
 
 
 def covplot(
@@ -381,6 +304,70 @@ def covplot(
     else:
         plt.show()
 
+def covhist(
+    bam,
+    out,
+    res=10000,
+    bins=None,
+    skip=1000,
+    name="",
+    blacklist="",
+    whitelist="",
+):
+    sns.set_style("white")
+    # Load BAM file, sort and index if needed
+    bam_handle = ps.Samfile(bam)
+    processed_bam = check_gen_sort_index(bam_handle)
+    # Reload processed BAM file
+    bam_handle = ps.Samfile(processed_bam)
+    blacklist = blacklist.split(",")
+    whitelist = whitelist.split(",")
+    chromlist = []
+    genome_len = sum(list(bam_handle.lengths))
+    scale, suffix = get_bp_scale(genome_len)
+    if len(whitelist[0]):
+        chromlist = whitelist
+    else:
+        chromlist = list(bam_handle.references)
+        if len(blacklist[0]):
+            for chrom in blacklist:
+                chromlist.remove(chrom)
+    all_depths = []
+    all_chroms = []
+    if bins is not None:
+        # Cannot skip windows if using custom binning
+        skip = 1
+        bins = pd.read_csv(
+                bins,
+                sep='\t',
+                header=None,
+                names=['chrom', 'start', 'end']
+        )
+    for chrom, length, counts in parse_bam(bam_handle, chromlist, res, bins):
+        coverage = counts[counts.columns[0]].values[::skip]
+        all_depths.append(coverage)
+        all_chroms += [chrom] * len(coverage)
 
-if __name__ == "__main__":
-    covplot_cmd()
+    if bins is None:
+        res_scale, res_suffix = get_bp_scale(res)
+        res_str = "%d %s" % (res / res_scale, res_suffix)
+    else:
+        res_str = "variable size windows"
+    all_depths = np.concatenate(all_depths, axis=0).flatten()
+    hist_depths = pd.DataFrame({'chrom': all_chroms, 'depth': all_depths})
+    # Set x scale based on min and max coverage of whole genome
+    highest = np.nanmax(all_depths)
+    lowest = np.nanmin(all_depths)
+    hist_bins = np.arange(lowest, highest, 10)
+    g = sns.FacetGrid(hist_depths, col="chrom", col_wrap=3)
+    g = (g.map(plt.hist, "depth", color="c", bins=hist_bins)
+            .set_titles("{col_name}")
+            .set_axis_labels("Genomic position [%s]" % res_suffix, "coverage (%s averaged)" % res_str))
+    if len(name) == 0:
+        name = os.path.splitext(os.path.basename(bam))[0]
+    g.fig.suptitle(name)
+    if len(out):
+        plt.savefig(out)
+    else:
+        plt.show()
+

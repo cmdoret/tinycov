@@ -1,7 +1,9 @@
 import os
+from click.testing import CliRunner
 import numpy as np
 import pysam as ps
-from tinycov import parse_bam, aneuploidy_thresh, covplot, get_bp_scale
+from tinycov import parse_bam, aneuploidy_thresh, covplot, get_bp_scale, covhist
+from tinycov.__main__ import covplot_cmd, covhist_cmd, cli
 
 TEST_BAM = "test_data/sorted.bam"
 BAD_BAM = "test_data/unsorted.bam"
@@ -110,6 +112,52 @@ def test_covplot():
     )
 
 
+def test_covhist():
+    """
+    Test whether the covhist function exits normally and handles unsorted
+    BAM files as well.
+    """
+    # Remove index and output files if present from previous runs
+    for f in [TEST_BAM + ".bai", OUT_TXT, OUT_IMG]:
+        try:
+            os.remove(f)
+        except:
+            continue
+
+    # Test sorted/not indexed and unsorted/not indexed cases
+    for bam in [TEST_BAM, BAD_BAM]:
+        covhist(
+            bam,
+            out=OUT_IMG,
+            res=2000,
+            skip=10,
+            name="test_run",
+            blacklist="",
+            whitelist="",
+        )
+
+    # Check if output files have been properly generated
+    assert os.path.isfile(OUT_IMG) == True
+
+    # Test sorted/indexed case (index generated in previous call)
+    # Use a whitelist and no ploidy thresholds
+    covhist(
+        bam,
+        out="test_data/output.png",
+        res=2000,
+        skip=10,
+        name="test_run",
+        blacklist="",
+        whitelist="seq2",
+    )
+
+    # Test sorted/indexed case (index generated in previous call)
+    # Use a blacklist and no output text or name
+    covhist(
+        bam, out=OUT_IMG, res=2000, skip=10, name="", blacklist="seq1", whitelist=""
+    )
+
+
 def test_get_bp_scale():
     obs = [0] * 4
     for i, size in enumerate([17, 180, 14000, 150870320]):
@@ -117,3 +165,16 @@ def test_get_bp_scale():
     exp = [(1, "bp"), (1, "bp"), (1000, "kb"), (1000000, "Mb")]
     for o, e in zip(obs, exp):
         assert o == e
+
+
+def test_cli():
+    """Test exit codes of CLI"""
+    runner = CliRunner()
+    result_plot = runner.invoke(
+        cli, ["covplot", TEST_BAM, "--out", OUT_IMG, "--res", 2000, "--skip", 10]
+    )
+    assert result_plot.exit_code == 0
+    result_hist = runner.invoke(
+        cli, ["covhist", TEST_BAM, "--out", OUT_IMG, "--res", 2000, "--skip", 10]
+    )
+    assert result_hist.exit_code == 0

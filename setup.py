@@ -29,8 +29,8 @@ CLASSIFIERS = [
 name = "tinycov"
 
 MAJOR = 0
-MINOR = 0
-MAINTENANCE = 8
+MINOR = 1
+MAINTENANCE = 0
 VERSION = "{}.{}.{}".format(MAJOR, MINOR, MAINTENANCE)
 
 LICENSE = "MIT"
@@ -63,5 +63,5 @@ setup(
     include_package_data=True,
     install_requires=REQUIREMENTS,
     long_description_content_type="text/markdown",
-    entry_points={"console_scripts": ["tinycov=tinycov.tinycov:covplot_cmd"]},
+    entry_points={"console_scripts": ["tinycov=tinycov.__main__:cli"]},
 )

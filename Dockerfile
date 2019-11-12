@@ -8,7 +8,7 @@ FROM ubuntu:16.04
 
 
 
-LABEL Name=tinycov Version=0.0.8
+LABEL Name=tinycov Version=0.1.0
 
 # Install python dependencies
 COPY * ./ /app/
