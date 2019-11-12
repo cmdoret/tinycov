@@ -7,6 +7,7 @@ from tinycov.__main__ import covplot_cmd, covhist_cmd, cli
 
 TEST_BAM = "test_data/sorted.bam"
 BAD_BAM = "test_data/unsorted.bam"
+TEST_BINS = "test_data/custom_bins.bed"
 OUT_TXT = "test_data/output.txt"
 OUT_IMG = "test_data/output.png"
 
@@ -84,12 +85,13 @@ def test_covplot():
     assert os.path.isfile(OUT_IMG) == True
 
     # Test sorted/indexed case (index generated in previous call)
-    # Use a whitelist and no ploidy thresholds
+    # Use a whitelist, custom bins and no ploidy thresholds
     covplot(
         bam,
         out="test_data/output.png",
         res=2000,
         skip=10,
+        bins=TEST_BINS,
         name="test_run",
         blacklist="",
         whitelist="seq2",
@@ -140,12 +142,13 @@ def test_covhist():
     assert os.path.isfile(OUT_IMG) == True
 
     # Test sorted/indexed case (index generated in previous call)
-    # Use a whitelist and no ploidy thresholds
+    # Use a whitelist, custom bins and no ploidy thresholds
     covhist(
         bam,
         out="test_data/output.png",
         res=2000,
         skip=10,
+        bins=TEST_BINS,
         name="test_run",
         blacklist="",
         whitelist="seq2",

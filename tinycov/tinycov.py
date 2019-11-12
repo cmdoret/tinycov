@@ -362,7 +362,7 @@ def covhist(
     g = sns.FacetGrid(hist_depths, col="chrom", col_wrap=3)
     g = (g.map(plt.hist, "depth", color="c", bins=hist_bins)
             .set_titles("{col_name}")
-            .set_axis_labels("Genomic position [%s]" % res_suffix, "coverage (%s averaged)" % res_str))
+            .set_axis_labels("Genomic position [%s]" % suffix, "coverage (%s averaged)" % res_str))
     if len(name) == 0:
         name = os.path.splitext(os.path.basename(bam))[0]
     g.fig.suptitle(name)
