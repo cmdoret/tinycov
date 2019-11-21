@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pysam as ps
 import click
+import pathlib
+from colorama import Fore
+from tqdm import tqdm
 
 
 def check_gen_sort_index(bam, cores=4):
@@ -32,14 +35,14 @@ def check_gen_sort_index(bam, cores=4):
 
     def check_bam_sorted(path):
         """Checks whether target BAM file is coordinate-sorted"""
-        header = ps.view(path, "-H")
+        header = ps.view(str(path), "-H")
         if header.count("SO:coordinate") == 1:
             issorted = True
         else:
             issorted = False
         return issorted
 
-    bam_path = bam.filename.decode()
+    bam_path = pathlib.Path(bam.filename.decode())
 
     try:
         # If the file has an index, there is nothing to do
@@ -48,16 +51,16 @@ def check_gen_sort_index(bam, cores=4):
     except ValueError:
         # Make a new sorted BAM file and store name for indexing
         if not check_bam_sorted(bam_path):
-            sorted_bam = os.path.splitext(bam_path)[0] + ".sorted.bam"
+            sorted_bam = str(bam_path.with_suffix(".sorted.bam"))
             print("Saving a coordinate-sorted BAM file as ", sorted_bam)
-            ps.sort(bam_path, "-O", "BAM", "-@", str(cores), "-o", sorted_bam)
+            ps.sort(str(bam_path), "-O", "BAM", "-@", str(cores), "-o", sorted_bam)
         else:
-            sorted_bam = bam_path
+            sorted_bam = str(bam_path)
         # Index the sorted BAM file (input file if it was sorted)
         print("Indexing BAM file")
         ps.index("-@", str(cores), sorted_bam)
 
-    return sorted_bam
+    return str(sorted_bam)
 
 
 def parse_bam(bam, chromlist, res, bins=None):
@@ -84,10 +87,10 @@ def parse_bam(bam, chromlist, res, bins=None):
         For each element in the generator, there are 3 values: The chromosome
         name, its length and an array of rolling coverage values.
     """
-    for chromo, length in zip(bam.references, bam.lengths):
+    for chromo, length in tqdm(zip(bam.references, bam.lengths), total=len(bam.references), desc="chromosome", bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.BLUE, Fore.RESET)): 
         if chromo in chromlist:
             depths = np.zeros(length + 1)
-            for base in bam.pileup(chromo, setpper="all"):
+            for base in tqdm(bam.pileup(chromo, setpper="all"), total=len(depths), desc="basepair", bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.BLUE, Fore.RESET)):
                 try:
                     depths[base.reference_pos] += base.nsegments
                 except AttributeError:
