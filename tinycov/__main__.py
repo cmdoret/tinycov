@@ -51,7 +51,7 @@ import tinycov as tc
 )
 @click.version_option(version=__version__)
 @click.argument("bam", type=click.Path(exists=True))
-@click.help_option(help="LOLOL")
+@click.help_option()
 def covhist_cmd(bam, out, res, bins, skip, name, blacklist, whitelist):
     """Visualise the histogram of coverage in rolling windows."""
     click.echo("Visualise read coverage histogram in rolling windows from a bam file.")
