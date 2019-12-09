@@ -357,15 +357,17 @@ def covhist(
     else:
         res_str = "variable size windows"
     all_depths = np.concatenate(all_depths, axis=0).flatten()
+    all_chroms = np.array(all_chroms)[~np.isnan(all_depths)]
+    all_depths = all_depths[~np.isnan(all_depths)]
     hist_depths = pd.DataFrame({'chrom': all_chroms, 'depth': all_depths})
     # Set x scale based on min and max coverage of whole genome
-    highest = np.nanmax(all_depths)
-    lowest = np.nanmin(all_depths)
-    hist_bins = np.arange(lowest, highest, 10)
+    upper_bound = np.percentile(all_depths, 95)
+    lower_bound = np.percentile(all_depths, 5)
+    hist_bins = np.linspace(lower_bound, upper_bound, 100)
     g = sns.FacetGrid(hist_depths, col="chrom", col_wrap=3)
     g = (g.map(plt.hist, "depth", color="c", bins=hist_bins)
             .set_titles("{col_name}")
-            .set_axis_labels("Genomic position [%s]" % suffix, "coverage (%s averaged)" % res_str))
+            .set_axis_labels("coverage (%s averaged)" % res_str, "Number of windows"))
     if len(name) == 0:
         name = os.path.splitext(os.path.basename(bam))[0]
     g.fig.suptitle(name)
