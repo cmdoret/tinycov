@@ -70,6 +70,14 @@ def common_options(f):
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
+def split_commas(arg):
+    """Safely split input by commas if it is a string, return None otherwise."""
+    try:
+        return arg.split(",")
+    except AttributeError:
+        return None
+
+
 @click.command()
 @common_options
 @click.version_option(version=__version__)
@@ -82,14 +90,15 @@ def covhist_cmd(
     click.echo(
         "Visualise read coverage histogram in rolling windows from a bam file."
     )
+
     tc.covhist(
         bam,
         out=out,
         bins=bins,
         skip=skip,
         name=name,
-        blacklist=blacklist,
-        whitelist=whitelist,
+        blacklist=split_commas(blacklist),
+        whitelist=split_commas(whitelist),
         max_depth=max_depth,
         no_filter=no_filter,
     )
@@ -135,8 +144,8 @@ def covplot_cmd(
         bins=bins,
         skip=skip,
         name=name,
-        blacklist=blacklist,
-        whitelist=whitelist,
+        blacklist=split_commas(blacklist),
+        whitelist=split_commas(whitelist),
         ploidy=ploidy,
         text=text,
         max_depth=max_depth,

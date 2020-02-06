@@ -29,8 +29,8 @@ CLASSIFIERS = [
 name = "tinycov"
 
 MAJOR = 0
-MINOR = 1
-MAINTENANCE = 4
+MINOR = 2
+MAINTENANCE = 0
 VERSION = "{}.{}.{}".format(MAJOR, MINOR, MAINTENANCE)
 
 LICENSE = "MIT"

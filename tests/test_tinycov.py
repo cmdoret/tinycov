@@ -2,12 +2,12 @@ import os
 from click.testing import CliRunner
 import numpy as np
 import pysam as ps
-from tinycov import (
+from tinycov import covplot, covhist
+from tinycov.utils import (
     parse_bam,
     aneuploidy_thresh,
-    covplot,
     get_bp_scale,
-    covhist,
+    process_chromlist,
 )
 from tinycov.__main__ import covplot_cmd, covhist_cmd, cli
 
@@ -18,11 +18,18 @@ OUT_TXT = "test_data/output.txt"
 OUT_IMG = "test_data/output.png"
 
 
+def test_process_chromlist():
+    bam_handle = ps.AlignmentFile(TEST_BAM)
+    assert len(process_chromlist(bam_handle)) == 3
+    assert process_chromlist(bam_handle, white=["seq1"]) == ["seq1"]
+    assert process_chromlist(bam_handle, black=["seq2"]) == ["seq1", "seq3"]
+
+
 def test_parse_bam():
     """
     Check if parse_bam returns requested chromosomes and correct number of bins.
     """
-    bam_handle = ps.Samfile(TEST_BAM)
+    bam_handle = ps.AlignmentFile(TEST_BAM)
     res = 100
     # Test using only the first chromosome
     test_chrom = list(bam_handle.references)[0]
@@ -73,7 +80,7 @@ def test_covplot():
     for f in [TEST_BAM + ".bai", OUT_TXT, OUT_IMG]:
         try:
             os.remove(f)
-        except:
+        except OSError:
             continue
 
     # Test sorted/not indexed and unsorted/not indexed cases
@@ -104,7 +111,7 @@ def test_covplot():
         bins=TEST_BINS,
         name="test_run",
         blacklist=None,
-        whitelist="seq2",
+        whitelist=["seq2"],
         ploidy=0,
         text="test_data/output.txt",
     )
@@ -117,7 +124,7 @@ def test_covplot():
         res=2000,
         skip=10,
         name=None,
-        blacklist="seq1",
+        blacklist=["seq1"],
         whitelist=None,
         ploidy=0,
         text=None,
@@ -161,7 +168,7 @@ def test_covhist():
         bins=TEST_BINS,
         name="test_run",
         blacklist=None,
-        whitelist="seq2",
+        whitelist=["seq2"],
     )
 
     # Test sorted/indexed case (index generated in previous call)
@@ -172,7 +179,7 @@ def test_covhist():
         res=2000,
         skip=10,
         name=None,
-        blacklist="seq1",
+        blacklist=["seq1"],
         whitelist=None,
     )
 
