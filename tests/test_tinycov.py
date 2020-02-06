@@ -2,7 +2,13 @@ import os
 from click.testing import CliRunner
 import numpy as np
 import pysam as ps
-from tinycov import parse_bam, aneuploidy_thresh, covplot, get_bp_scale, covhist
+from tinycov import (
+    parse_bam,
+    aneuploidy_thresh,
+    covplot,
+    get_bp_scale,
+    covhist,
+)
 from tinycov.__main__ import covplot_cmd, covhist_cmd, cli
 
 TEST_BAM = "test_data/sorted.bam"
@@ -40,13 +46,17 @@ def test_aneuploidy_thresh():
     # Test haploid case
     exp_haplo_thresh = np.array([x * mean for x in [1, 2]])
     obs_haplo_dict = aneuploidy_thresh(depths, ploidy=1)
-    obs_haplo_thresh = np.sort(np.array([i[0] for i in obs_haplo_dict.values()]))
+    obs_haplo_thresh = np.sort(
+        np.array([i[0] for i in obs_haplo_dict.values()])
+    )
     assert np.all(np.isclose(exp_haplo_thresh, obs_haplo_thresh, rtol=1))
 
     # Test diploid case
     exp_diplo_thresh = np.array([x * mean for x in [0.5, 1, 1.5, 2]])
     obs_diplo_dict = aneuploidy_thresh(depths, ploidy=2)
-    obs_diplo_thresh = np.sort(np.array([i[0] for i in obs_diplo_dict.values()]))
+    obs_diplo_thresh = np.sort(
+        np.array([i[0] for i in obs_diplo_dict.values()])
+    )
     assert np.all(np.isclose(exp_diplo_thresh, obs_diplo_thresh, rtol=1))
 
     # Test that output structure is {ploidy: [thresh, lty]}
@@ -74,8 +84,8 @@ def test_covplot():
             res=2000,
             skip=10,
             name="test_run",
-            blacklist="",
-            whitelist="",
+            blacklist=None,
+            whitelist=None,
             ploidy=2,
             text=OUT_TXT,
         )
@@ -93,7 +103,7 @@ def test_covplot():
         skip=10,
         bins=TEST_BINS,
         name="test_run",
-        blacklist="",
+        blacklist=None,
         whitelist="seq2",
         ploidy=0,
         text="test_data/output.txt",
@@ -106,11 +116,11 @@ def test_covplot():
         out=OUT_IMG,
         res=2000,
         skip=10,
-        name="",
+        name=None,
         blacklist="seq1",
-        whitelist="",
+        whitelist=None,
         ploidy=0,
-        text="",
+        text=None,
     )
 
 
@@ -134,8 +144,8 @@ def test_covhist():
             res=2000,
             skip=10,
             name="test_run",
-            blacklist="",
-            whitelist="",
+            blacklist=None,
+            whitelist=None,
         )
 
     # Check if output files have been properly generated
@@ -150,14 +160,20 @@ def test_covhist():
         skip=10,
         bins=TEST_BINS,
         name="test_run",
-        blacklist="",
+        blacklist=None,
         whitelist="seq2",
     )
 
     # Test sorted/indexed case (index generated in previous call)
     # Use a blacklist and no output text or name
     covhist(
-        bam, out=OUT_IMG, res=2000, skip=10, name="", blacklist="seq1", whitelist=""
+        bam,
+        out=OUT_IMG,
+        res=2000,
+        skip=10,
+        name=None,
+        blacklist="seq1",
+        whitelist=None,
     )
 
 
@@ -174,10 +190,12 @@ def test_cli():
     """Test exit codes of CLI"""
     runner = CliRunner()
     result_plot = runner.invoke(
-        cli, ["covplot", TEST_BAM, "--out", OUT_IMG, "--res", 2000, "--skip", 10]
+        cli,
+        ["covplot", TEST_BAM, "--out", OUT_IMG, "--res", 2000, "--skip", 10],
     )
     assert result_plot.exit_code == 0
     result_hist = runner.invoke(
-        cli, ["covhist", TEST_BAM, "--out", OUT_IMG, "--res", 2000, "--skip", 10]
+        cli,
+        ["covhist", TEST_BAM, "--out", OUT_IMG, "--res", 2000, "--skip", 10],
     )
     assert result_hist.exit_code == 0
