@@ -29,7 +29,7 @@ CLASSIFIERS = [
 name = "tinycov"
 
 MAJOR = 0
-MINOR = 2
+MINOR = 3
 MAINTENANCE = 0
 VERSION = "{}.{}.{}".format(MAJOR, MINOR, MAINTENANCE)
 
