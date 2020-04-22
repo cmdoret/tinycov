@@ -1,6 +1,6 @@
 # Helper commands for bam files operations used in tinycov
 # 20200206, cmdoret
-from typing import Optional, Iterable, List, Tuple, Dict
+from typing import Optional, Iterable, List, Tuple, Dict, Generator, Union
 import pysam as ps
 import pathlib
 import numpy as np
@@ -216,7 +216,7 @@ def parse_bam(
 
 def aneuploidy_thresh(
     depths: "numpy.array[float]", ploidy: int = 2
-) -> Dict[str, List[float, str]]:
+) -> Dict[str, List[Union[float, str]]]:
     """
     Compute coverage thresholds for aneuploidies based on default ploidy.
 
