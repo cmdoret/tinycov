@@ -9,6 +9,8 @@ import seaborn as sns
 import pysam as ps
 import tinycov.utils as tu
 
+__all__ = ["covplot", "covhist"]
+
 
 def covplot(
     bam,
