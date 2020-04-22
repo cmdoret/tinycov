@@ -225,7 +225,6 @@ def covhist(
     # Reload processed BAM file
     bam_handle = ps.AlignmentFile(processed_bam)
     chromlist = []
-    genome_len = sum(list(bam_handle.lengths))
     chromlist = tu.process_chromlist(
         bam_handle, black=blacklist, white=whitelist
     )
