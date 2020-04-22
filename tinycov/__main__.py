@@ -1,3 +1,4 @@
+from typing import List
 import click
 from tinycov.version import __version__
 import tinycov as tc
@@ -70,7 +71,7 @@ def common_options(f):
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
 
-def split_commas(arg):
+def split_commas(arg: str) -> List[str]:
     """Safely split input by commas if it is a string, return None otherwise."""
     try:
         return arg.split(",")
@@ -164,4 +165,3 @@ def cli():
 
 cli.add_command(covplot_cmd, name="covplot")
 cli.add_command(covhist_cmd, name="covhist")
-
