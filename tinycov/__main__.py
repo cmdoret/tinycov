@@ -164,4 +164,3 @@ def cli():
 
 cli.add_command(covplot_cmd, name="covplot")
 cli.add_command(covhist_cmd, name="covhist")
-

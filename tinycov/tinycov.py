@@ -72,7 +72,9 @@ def covplot(
     chromlist = []
     genome_len = sum(list(bam_handle.lengths))
     scale, suffix = tu.get_bp_scale(genome_len)
-    chromlist = tu.process_chromlist(bam_handle, black=blacklist, white=whitelist)
+    chromlist = tu.process_chromlist(
+        bam_handle, black=blacklist, white=whitelist
+    )
     all_depths = []
     if bins is not None:
         # Cannot skip windows if using custom binning
@@ -222,7 +224,9 @@ def covhist(
     bam_handle = ps.AlignmentFile(processed_bam)
     chromlist = []
     genome_len = sum(list(bam_handle.lengths))
-    chromlist = tu.process_chromlist(bam_handle, black=blacklist, white=whitelist)
+    chromlist = tu.process_chromlist(
+        bam_handle, black=blacklist, white=whitelist
+    )
     all_depths = []
     all_chroms = []
     if bins is not None:
@@ -271,4 +275,3 @@ def covhist(
         plt.show()
     else:
         plt.savefig(out)
-

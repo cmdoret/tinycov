@@ -13,5 +13,5 @@ __credits__ = [
 ]
 __license__ = "MIT"
 __maintainer__ = "Cyril Matthey-Doret"
-__email__ = "cyril.matthey-doret@pasteur.fr" 
+__email__ = "cyril.matthey-doret@pasteur.fr"
 __status__ = "Alpha"
