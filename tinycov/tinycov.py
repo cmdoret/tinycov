@@ -7,10 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pysam as ps
-import click
-import pathlib
-from colorama import Fore
-from tqdm import tqdm
 import tinycov.utils as tu
 
 
@@ -224,7 +220,6 @@ def covhist(
     bam_handle = ps.AlignmentFile(processed_bam)
     chromlist = []
     genome_len = sum(list(bam_handle.lengths))
-    scale, suffix = tu.get_bp_scale(genome_len)
     chromlist = tu.process_chromlist(bam_handle, black=blacklist, white=whitelist)
     all_depths = []
     all_chroms = []

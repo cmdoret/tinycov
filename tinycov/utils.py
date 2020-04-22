@@ -4,7 +4,6 @@ import pysam as ps
 import pathlib
 import numpy as np
 import pandas as pd
-import pathlib
 from colorama import Fore
 from tqdm import tqdm
 
