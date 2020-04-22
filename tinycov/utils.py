@@ -1,5 +1,6 @@
 # Helper commands for bam files operations used in tinycov
 # 20200206, cmdoret
+from typing import Optional, Iterable, List, Tuple, Dict
 import pysam as ps
 import pathlib
 import numpy as np
@@ -8,7 +9,11 @@ from colorama import Fore
 from tqdm import tqdm
 
 
-def process_chromlist(bam, white=None, black=None):
+def process_chromlist(
+    bam: "pysam.AlignmentFile",
+    white: Optional[Iterable[str]] = None,
+    black: Optional[Iterable[str]] = None,
+) -> List[str]:
     """
     Given a bam handle, a chromosome blacklist and whitelist, define which
     chromosomes should be treated.
@@ -44,7 +49,7 @@ def process_chromlist(bam, white=None, black=None):
     return chroms
 
 
-def check_gen_sort_index(bam, cores=4):
+def check_gen_sort_index(bam: "pysam.AlignmentFile", cores: int = 4) -> str:
     """
     Index the input BAM file if needed. If the file is not coordinate-sorted,
     generate a sorted file. Returns the path to the sorted-indexed BAM file.
@@ -64,7 +69,7 @@ def check_gen_sort_index(bam, cores=4):
         The path to the sorted indexed BAM file
     """
 
-    def check_bam_sorted(path):
+    def check_bam_sorted(path: str) -> bool:
         """Checks whether target BAM file is coordinate-sorted"""
         header = ps.view(str(path), "-H")
         if header.count("SO:coordinate") == 1:
@@ -96,7 +101,7 @@ def check_gen_sort_index(bam, cores=4):
     return str(sorted_bam)
 
 
-def get_bp_scale(size):
+def get_bp_scale(size: int) -> Tuple[int, str]:
     """
     Given a sequence length, compute the appropriate scale and associated suffix (bp, kb, Mb, Gb).
 
@@ -134,8 +139,13 @@ def get_bp_scale(size):
 
 
 def parse_bam(
-    bam, chromlist, res, bins=None, max_depth=100000, no_filter=False
-):
+    bam: "pysam.AlignmentFile",
+    chromlist: Iterable[str],
+    res: int,
+    bins: Optional["pandas.DataFrame"] = None,
+    max_depth: int = 100000,
+    no_filter: bool = False,
+) -> Generator[Tuple[str, int, "pandas.DataFrame"], None, None]:
     """
     Parse input indexed, coordinte-sorted bam file and yield chromosomes 
     one by one along with a rolling window mean of coverage.
@@ -152,6 +162,10 @@ def parse_bam(
         Predefined window segmentation in the case of variable-size windows.
         Will override res if used. The dataframe should have columns: "chrom",
         "start" and "end"
+    no_filter : bool
+        Do not filter out PCR duplicates and secondary alignments (use all reads).
+    max_depth : int
+        Maximum read depth allowed. Positions above this value will be set to it.
 
     Returns
     -------
@@ -200,7 +214,9 @@ def parse_bam(
                 yield chromo, length, pd.DataFrame(wins)
 
 
-def aneuploidy_thresh(depths, ploidy=2):
+def aneuploidy_thresh(
+    depths: "numpy.array[float]", ploidy: int = 2
+) -> Dict[str, List[float, str]]:
     """
     Compute coverage thresholds for aneuploidies based on default ploidy.
 

@@ -2,6 +2,7 @@
 # cmdoret, 20190920
 
 import os.path
+from typing import Iterable, Optional
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,18 +14,18 @@ __all__ = ["covplot", "covhist"]
 
 
 def covplot(
-    bam,
-    out,
-    res=10000,
-    bins=None,
-    skip=1000,
-    name=None,
-    blacklist=None,
-    whitelist=None,
-    ploidy=2,
-    text=None,
-    no_filter=False,
-    max_depth=100000,
+    bam: str,
+    out: Optional[str],
+    res: int = 10000,
+    bins: Optional[str] = None,
+    skip: int = 1000,
+    name: Optional[str] = None,
+    blacklist: Optional[Iterable[str]] = None,
+    whitelist: Optional[Iterable[str]] = None,
+    ploidy: Optional[int] = 2,
+    text: Optional[str] = None,
+    no_filter: bool = False,
+    max_depth: int = 100000,
 ):
     """
     Compute read coverage from a BAM file in sliding windows and visualize the
@@ -32,9 +33,9 @@ def covplot(
 
     Parameters
     ----------
-    bam : str or click.Path
+    bam : str
         Path to the input BAM file.
-    out : str, click.Path or None
+    out : str or None
         Output file for the figure. If none specified, show the figure without
         saving.
     res : int
@@ -54,7 +55,7 @@ def covplot(
     ploidy : int or None
         Expected ploidy of the organism. Lines will be drawn at expected coverate
         ploidy for different copy number variations. Set to None to ignore ploidy.
-    text : str, click.Path or None
+    text : str or None
         Path to an optional output text file where the sliding window coverage
         will be written in bedgraph format.
     no_filter : bool
@@ -175,16 +176,16 @@ def covplot(
 
 
 def covhist(
-    bam,
-    out,
-    res=10000,
-    bins=None,
-    skip=1000,
-    name=None,
-    blacklist=None,
-    whitelist=None,
-    no_filter=False,
-    max_depth=100000,
+    bam: str,
+    out: Optional[str],
+    res: int = 10000,
+    bins: Optional[str] = None,
+    skip: int = 1000,
+    name: Optional[str] = None,
+    blacklist: Optional[Iterable[str]] = None,
+    whitelist: Optional[Iterable[str]] = None,
+    no_filter: bool = False,
+    max_depth: int = 100000,
 ):
     """
     Compute read coverage per sliding window from a BAM file and generate
@@ -192,9 +193,9 @@ def covhist(
 
     Parameters
     ----------
-    bam : str or click.Path
+    bam : str
         Path to the input BAM file.
-    out : str, click.Path or None
+    out : str or None
         Output file for the figure. If none specified, show the figure without
         saving.
     res : int
@@ -203,8 +204,9 @@ def covhist(
         Distance to skip between adjacent windows. If skip == res, windows will
         be non-overlapping.
     bins : str or None
-        Define a custom genome segmentation in which to compute coverage, instead
-        of regular sliding windows. Overrides res and skip. Set to None to ignore.
+        Path to a BED file defining a custom genome segmentation in which to
+        compute coverage, instead of regular sliding windows. Overrides res
+        and skip. Set to None to ignore.
     name : str or None
         Display this name as the plot title.
     blacklist : list of strs or None
