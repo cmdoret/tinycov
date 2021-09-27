@@ -103,7 +103,7 @@ def covplot(
                 chrom_bins = bins.loc[bins.chrom == chrom, :]
                 chrom_bins["depth"] = coverage
                 centers = (chrom_bins.start + chrom_bins.end) / 2
-            plt.plot((centers + offset[chrom_id]) / scale, coverage, ".")
+            plt.scatter((centers + offset[chrom_id]) / scale, coverage, marker=".", edgecolors='none')
             # Write data as text, if requested
             if text:
                 if bins is None:
