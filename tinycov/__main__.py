@@ -60,6 +60,7 @@ def common_options(f):
             default=100000,
             help="Maximum read depth permitted. Position with higher coverage will set to this value",
             type=int,
+            show_default=True,
         ),
         click.option(
             "--no-filter",
