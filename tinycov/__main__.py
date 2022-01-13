@@ -51,23 +51,29 @@ def common_options(f):
             "--out",
             "-o",
             default=None,
-            help="Output file where to write the plot. If not provided, the plot is shown interactively",
+            help="Output file where to write the plot. If not provided, the plot is shown interactively.",
             type=click.Path(exists=False),
         ),
         click.option(
             "--max-depth",
             "-m",
             default=100000,
-            help="Maximum read depth permitted. Position with higher coverage will set to this value",
+            help="Maximum read depth permitted. Position with higher coverage will set to this value.",
             type=int,
             show_default=True,
         ),
         click.option(
             "--no-filter",
             "-N",
-            help="Use all reads. By default, PCR duplicates and secondary alignments are excluded",
+            help="Use all reads. By default, PCR duplicates and secondary alignments are excluded.",
             is_flag=True,
         ),
+        click.option(
+            "--circular",
+            "-c",
+            help="Consider the chromosome(s) as circular. By default consider them as linear.",
+            is_flag=True,
+        )
     ]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
@@ -86,7 +92,7 @@ def split_commas(arg: str) -> List[str]:
 @click.argument("bam", type=click.Path(exists=True))
 @click.help_option()
 def covhist_cmd(
-    bam, out, res, bins, skip, name, blacklist, whitelist, max_depth, no_filter
+    bam, out, res, bins, skip, name, blacklist, whitelist, max_depth, no_filter, circular,
 ):
     """Visualise the histogram of coverage in rolling windows."""
     click.echo(
@@ -103,6 +109,7 @@ def covhist_cmd(
         whitelist=split_commas(whitelist),
         max_depth=max_depth,
         no_filter=no_filter,
+        circular=circular,
     )
 
 
@@ -136,6 +143,7 @@ def covplot_cmd(
     text,
     max_depth,
     no_filter,
+    circular,
 ):
     """Visualise coverage in rolling windows, optionally save results to a bedgraph file."""
     click.echo("Visualise read coverage in rolling windows from a bam file.")
@@ -152,6 +160,7 @@ def covplot_cmd(
         text=text,
         max_depth=max_depth,
         no_filter=no_filter,
+        circular=circular,
     )
 
 
