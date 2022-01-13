@@ -8,7 +8,7 @@ FROM ubuntu:16.04
 
 
 
-LABEL Name=tinycov Version=0.3.1
+LABEL Name=tinycov Version=0.4.0
 
 # Install python dependencies
 COPY * ./ /app/
@@ -31,7 +31,7 @@ RUN conda install -c conda-forge -y \
     htslib \
     pysam \ 
 
-RUN pip install -Ur requirements.txt
+    RUN pip install -Ur requirements.txt
 # Using pip:
 RUN pip install .
 #CMD ["python3", "-m", "hicstuff.main"]
