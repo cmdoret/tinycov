@@ -26,6 +26,7 @@ def covplot(
     text: Optional[str] = None,
     no_filter: bool = False,
     max_depth: int = 100000,
+    circular: bool = False,
 ):
     """
     Compute read coverage from a BAM file in sliding windows and visualize the
@@ -62,6 +63,8 @@ def covplot(
         Do not filter out PCR duplicates and secondary alignments (use all reads).
     max_depth : int
         Maximum read depth allowed. Positions above this value will be set to it.
+    circular : bool
+        Either the chromosomes are circular or not.
 
     """
     sns.set_style("white")
@@ -95,10 +98,16 @@ def covplot(
             bins,
             max_depth=max_depth,
             no_filter=no_filter,
+            circular=circular,
         ):
             coverage = counts[counts.columns[0]].values[::skip]
             if bins is None:
                 centers = counts.index.values[::skip]
+                # Remove extended edges in case of circular chromosomes.
+                if circular:
+                    tronc = round(res / skip)
+                    coverage = coverage[tronc:-tronc]
+                    centers = centers[tronc:-tronc]
             else:
                 chrom_bins = bins.loc[bins.chrom == chrom, :]
                 chrom_bins["depth"] = coverage
@@ -186,6 +195,7 @@ def covhist(
     whitelist: Optional[Iterable[str]] = None,
     no_filter: bool = False,
     max_depth: int = 100000,
+    circular: bool = False,
 ):
     """
     Compute read coverage per sliding window from a BAM file and generate
@@ -217,6 +227,8 @@ def covhist(
         Do not filter out PCR duplicates and secondary alignments (use all reads).
     max_depth : int
         Maximum read depth allowed. Positions above this value will be set to it.
+    circular : bool
+        Either the chromosomes are circular or not.
     """
     sns.set_style("white")
     # Load BAM file, sort and index if needed
@@ -243,8 +255,13 @@ def covhist(
         bins,
         max_depth=max_depth,
         no_filter=no_filter,
+        circular=circular,
     ):
         coverage = counts[counts.columns[0]].values[::skip]
+        # Remove extended edges in case of circular chromosomes.
+        if circular:
+            tronc = round(res / skip)
+            coverage = coverage[tronc:-tronc]
         all_depths.append(coverage)
         all_chroms += [chrom] * len(coverage)
 

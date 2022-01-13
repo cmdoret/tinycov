@@ -103,7 +103,8 @@ def check_gen_sort_index(bam: "pysam.AlignmentFile", cores: int = 4) -> str:
 
 def get_bp_scale(size: int) -> Tuple[int, str]:
     """
-    Given a sequence length, compute the appropriate scale and associated suffix (bp, kb, Mb, Gb).
+    Given a sequence length, compute the appropriate scale and associated suffix
+    (bp, kb, Mb, Gb).
 
     Parameters
     ----------
@@ -113,7 +114,8 @@ def get_bp_scale(size: int) -> Tuple[int, str]:
     Returns
     -------
     scale : int
-        The number by which basepairs should be divided to achieve desired suffix.
+        The number by which basepairs should be divided to achieve desired
+        suffix.
     suffix : str
         The basepair unit associated with the scale.
 
@@ -145,9 +147,10 @@ def parse_bam(
     bins: Optional["pandas.DataFrame"] = None,
     max_depth: int = 100000,
     no_filter: bool = False,
+    circular: bool = False,
 ) -> Generator[Tuple[str, int, "pandas.DataFrame"], None, None]:
     """
-    Parse input indexed, coordinte-sorted bam file and yield chromosomes 
+    Parse input indexed, coordinate-sorted bam file and yield chromosomes 
     one by one along with a rolling window mean of coverage.
 
     Parameters
@@ -197,9 +200,18 @@ def parse_bam(
             )
             # If resolution is fixed, use pandas's method for rolling windows
             if bins is None:
-                yield chromo, length, df.rolling(
-                    window=res, center=True
-                ).mean()
+                # extend dataframe to compute rolling window on a pseudo
+                # circular array.
+                if circular:
+                    yield chromo, length, pd.concat(
+                            [df.iloc[len(df)-res:, :], df, df.iloc[:res, :]]
+                        ).rolling(
+                        window=res, center=True
+                    ).mean()
+                else:
+                    yield chromo, length, df.rolling(
+                        window=res, center=True
+                    ).mean()
             # If using a custom binning, compute each window independently
             else:
                 chrom_bins = bins.loc[bins.chrom == chromo, :]

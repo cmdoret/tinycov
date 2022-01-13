@@ -117,7 +117,7 @@ def test_covplot():
     )
 
     # Test sorted/indexed case (index generated in previous call)
-    # Use a blacklist and no output text or name
+    # Use a blacklist circular chromosomes and no output text or name
     covplot(
         bam,
         out=OUT_IMG,
@@ -128,6 +128,7 @@ def test_covplot():
         whitelist=None,
         ploidy=0,
         text=None,
+        circular=True,
     )
 
 
@@ -172,7 +173,7 @@ def test_covhist():
     )
 
     # Test sorted/indexed case (index generated in previous call)
-    # Use a blacklist and no output text or name
+    # Use a blacklist, circular chromosomes and no output text or name
     covhist(
         bam,
         out=OUT_IMG,
@@ -181,6 +182,7 @@ def test_covhist():
         name=None,
         blacklist=["seq1"],
         whitelist=None,
+        circular=True,
     )
 
 
