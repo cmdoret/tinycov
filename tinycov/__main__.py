@@ -170,7 +170,6 @@ def cli():
     """
     tinycov: visualisation of coverage from BAM files using rolling window averages.
     """
-    ...
 
 
 cli.add_command(covplot_cmd, name="covplot")
