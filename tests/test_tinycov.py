@@ -9,7 +9,7 @@ from tinycov.utils import (
     get_bp_scale,
     process_chromlist,
 )
-from tinycov.__main__ import covplot_cmd, covhist_cmd, cli
+from tinycov.__main__ import cli
 
 TEST_BAM = "test_data/sorted.bam"
 BAD_BAM = "test_data/unsorted.bam"
@@ -138,11 +138,9 @@ def test_covhist():
     BAM files as well.
     """
     # Remove index and output files if present from previous runs
-    for f in [TEST_BAM + ".bai", OUT_TXT, OUT_IMG]:
-        try:
-            os.remove(f)
-        except:
-            continue
+    for test_f in [TEST_BAM + ".bai", OUT_TXT, OUT_IMG]:
+        if os.path.exists(test_f):
+            os.remove(test_f)
 
     # Test sorted/not indexed and unsorted/not indexed cases
     for bam in [TEST_BAM, BAD_BAM]:
