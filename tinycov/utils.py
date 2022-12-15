@@ -1,16 +1,18 @@
-# Helper commands for bam files operations used in tinycov
+"""Helper commands for bam files operations used in tinycov"""
 # 20200206, cmdoret
-from typing import Optional, Iterable, List, Tuple, Dict, Generator, Union
-import pysam as ps
+# pylint: disable=E1101
 import pathlib
+from typing import Optional, Iterable, List, Tuple, Dict, Generator, Union
+
+from colorama import Fore
 import numpy as np
 import pandas as pd
-from colorama import Fore
+import pysam as ps
 from tqdm import tqdm
 
 
 def process_chromlist(
-    bam: "pysam.AlignmentFile",
+    bam: ps.AlignmentFile,
     white: Optional[Iterable[str]] = None,
     black: Optional[Iterable[str]] = None,
 ) -> List[str]:
@@ -34,8 +36,8 @@ def process_chromlist(
         Chromosomes to be analysed.
     """
     # Require a list of strings
-    for l in [white, black]:
-        if not (isinstance(l, list) or l is None):
+    for chrom_list in [white, black]:
+        if not (isinstance(chrom_list, list) or chrom_list is None):
             raise ValueError("white and black must be lists of strings.")
 
     if white is None:
@@ -49,7 +51,7 @@ def process_chromlist(
     return chroms
 
 
-def check_gen_sort_index(bam: "pysam.AlignmentFile", cores: int = 4) -> str:
+def check_gen_sort_index(bam: ps.AlignmentFile, cores: int = 4) -> str:
     """
     Index the input BAM file if needed. If the file is not coordinate-sorted,
     generate a sorted file. Returns the path to the sorted-indexed BAM file.
@@ -72,10 +74,7 @@ def check_gen_sort_index(bam: "pysam.AlignmentFile", cores: int = 4) -> str:
     def check_bam_sorted(path: str) -> bool:
         """Checks whether target BAM file is coordinate-sorted"""
         header = ps.view(str(path), "-H")
-        if header.count("SO:coordinate") == 1:
-            issorted = True
-        else:
-            issorted = False
+        issorted = bool(header.count("SO:coordinate") == 1)
         return issorted
 
     bam_path = pathlib.Path(bam.filename.decode())
@@ -141,16 +140,16 @@ def get_bp_scale(size: int) -> Tuple[int, str]:
 
 
 def parse_bam(
-    bam: "pysam.AlignmentFile",
+    bam: ps.AlignmentFile,
     chromlist: Iterable[str],
     res: int,
-    bins: Optional["pandas.DataFrame"] = None,
+    bins: Optional[pd.DataFrame] = None,
     max_depth: int = 100000,
     no_filter: bool = False,
     circular: bool = False,
-) -> Generator[Tuple[str, int, "pandas.DataFrame"], None, None]:
+) -> Generator[Tuple[str, int, pd.DataFrame], None, None]:
     """
-    Parse input indexed, coordinate-sorted bam file and yield chromosomes 
+    Parse input indexed, coordinate-sorted bam file and yield chromosomes
     one by one along with a rolling window mean of coverage.
 
     Parameters
@@ -216,9 +215,6 @@ def parse_bam(
             else:
                 chrom_bins = bins.loc[bins.chrom == chromo, :]
                 wins = np.zeros(chrom_bins.shape[0])
-                # TODO: Use a faster trick (df.groupby ?)
-                # TODO: Ensure windows are centered, test if results are identical to
-                # fixed res
                 for i, (s, e) in enumerate(
                     zip(chrom_bins.start, chrom_bins.end)
                 ):
@@ -227,7 +223,7 @@ def parse_bam(
 
 
 def aneuploidy_thresh(
-    depths: "numpy.array[float]", ploidy: int = 2
+    depths: 'np.ndarray[float]', ploidy: int = 2
 ) -> Dict[str, List[Union[float, str]]]:
     """
     Compute coverage thresholds for aneuploidies based on default ploidy.

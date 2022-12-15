@@ -1,5 +1,6 @@
-# Compute and plot coverage in rolling windows along the genome of input bam file.
+"""Compute and plot coverage in rolling windows along the genome of input bam file."""
 # cmdoret, 20190920
+# pylint: disable=E1101
 
 import os.path
 from typing import Iterable, Optional
@@ -248,7 +249,7 @@ def covhist(
         bins = pd.read_csv(
             bins, sep="\t", header=None, names=["chrom", "start", "end"]
         )
-    for chrom, length, counts in tu.parse_bam(
+    for chrom, _, counts in tu.parse_bam(
         bam_handle,
         chromlist,
         res,
