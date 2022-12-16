@@ -21,7 +21,7 @@ RUN conda install -c conda-forge -y \
     htslib \
     pysam
 
-RUN pip install -Ur requirements.txt
+RUN pip install -Ur /app/requirements.txt
 # Using pip:
 RUN pip install .
 ENTRYPOINT [ "tinycov" ]
