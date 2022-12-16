@@ -53,17 +53,13 @@ def test_aneuploidy_thresh():
     # Test haploid case
     exp_haplo_thresh = np.array([x * mean for x in [1, 2]])
     obs_haplo_dict = aneuploidy_thresh(depths, ploidy=1)
-    obs_haplo_thresh = np.sort(
-        np.array([i[0] for i in obs_haplo_dict.values()])
-    )
+    obs_haplo_thresh = np.sort(np.array([i[0] for i in obs_haplo_dict.values()]))
     assert np.all(np.isclose(exp_haplo_thresh, obs_haplo_thresh, rtol=1))
 
     # Test diploid case
     exp_diplo_thresh = np.array([x * mean for x in [0.5, 1, 1.5, 2]])
     obs_diplo_dict = aneuploidy_thresh(depths, ploidy=2)
-    obs_diplo_thresh = np.sort(
-        np.array([i[0] for i in obs_diplo_dict.values()])
-    )
+    obs_diplo_thresh = np.sort(np.array([i[0] for i in obs_diplo_dict.values()]))
     assert np.all(np.isclose(exp_diplo_thresh, obs_diplo_thresh, rtol=1))
 
     # Test that output structure is {ploidy: [thresh, lty]}
@@ -98,8 +94,8 @@ def test_covplot():
         )
 
     # Check if output files have been properly generated
-    assert os.path.isfile(OUT_TXT) == True
-    assert os.path.isfile(OUT_IMG) == True
+    assert os.path.isfile(OUT_TXT)
+    assert os.path.isfile(OUT_IMG)
 
     # Test sorted/indexed case (index generated in previous call)
     # Use a whitelist, custom bins and no ploidy thresholds

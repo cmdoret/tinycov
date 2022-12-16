@@ -1,7 +1,7 @@
 """
 A tiny standalone to quickly visualise coverage from BAM files.
 """
-from .tinycov import covplot, covhist
+from .tinycov import covplot, covhist # pylint: disable=unused-import
 
 __author__ = "Cyril Matthey-Doret"
 __copyright__ = "Copyright © 2019, Cyril Matthey-Doret"

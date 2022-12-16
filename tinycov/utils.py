@@ -88,9 +88,7 @@ def check_gen_sort_index(bam: ps.AlignmentFile, cores: int = 4) -> str:
         if not check_bam_sorted(bam_path):
             sorted_bam = str(bam_path.with_suffix(".sorted.bam"))
             print("Saving a coordinate-sorted BAM file as ", sorted_bam)
-            ps.sort(
-                str(bam_path), "-O", "BAM", "-@", str(cores), "-o", sorted_bam
-            )
+            ps.sort(str(bam_path), "-O", "BAM", "-@", str(cores), "-o", sorted_bam)
         else:
             sorted_bam = str(bam_path)
         # Index the sorted BAM file (input file if it was sorted)
@@ -194,36 +192,28 @@ def parse_bam(
                     depths[base.reference_pos] += base.nsegments
                 except AttributeError:
                     depths[base.pos] += len(base.pileups)
-            df = pd.DataFrame(
-                depths, index=np.arange(length + 1), columns=["depth"]
-            )
+            df = pd.DataFrame(depths, index=np.arange(length + 1), columns=["depth"])
             # If resolution is fixed, use pandas's method for rolling windows
             if bins is None:
                 # extend dataframe to compute rolling window on a pseudo
                 # circular array.
                 if circular:
                     yield chromo, length, pd.concat(
-                            [df.iloc[len(df)-res:, :], df, df.iloc[:res, :]]
-                        ).rolling(
-                        window=res, center=True
-                    ).mean()
+                        [df.iloc[len(df) - res :, :], df, df.iloc[:res, :]]
+                    ).rolling(window=res, center=True).mean()
                 else:
-                    yield chromo, length, df.rolling(
-                        window=res, center=True
-                    ).mean()
+                    yield chromo, length, df.rolling(window=res, center=True).mean()
             # If using a custom binning, compute each window independently
             else:
                 chrom_bins = bins.loc[bins.chrom == chromo, :]
                 wins = np.zeros(chrom_bins.shape[0])
-                for i, (s, e) in enumerate(
-                    zip(chrom_bins.start, chrom_bins.end)
-                ):
+                for i, (s, e) in enumerate(zip(chrom_bins.start, chrom_bins.end)):
                     wins[i] = df.depth[s:e].mean()
                 yield chromo, length, pd.DataFrame(wins)
 
 
 def aneuploidy_thresh(
-    depths: 'np.ndarray[float]', ploidy: int = 2
+    depths: "np.ndarray[float]", ploidy: int = 2
 ) -> Dict[str, List[Union[float, str]]]:
     """
     Compute coverage thresholds for aneuploidies based on default ploidy.
@@ -247,10 +237,7 @@ def aneuploidy_thresh(
     cov_mult = cn_values / ploidy
     ltypes = ["-", "--", "-.", ":"]
     cn_cov = {
-        "{p}N".format(p=int(cn_values[i])): [
-            med * mult,
-            ltypes[i % len(ltypes)],
-        ]
+        "{p}N".format(p=int(cn_values[i])): [med * mult, ltypes[i % len(ltypes)],]
         for i, mult in enumerate(cov_mult)
     }
     return cn_cov

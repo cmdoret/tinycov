@@ -26,7 +26,8 @@ def common_options(f):
             "--bins",
             "-B",
             default=None,
-            help="Tab-separated file of three columns (chromosome, start, end) without header containing a custom binning to use. Overrides --res and --skip, optional.",
+            help="TSV file of three columns (chromosome, start, end) without header providing "
+            "a custom binning. Overrides --res and --skip.",
             show_default=False,
         ),
         click.option(
@@ -73,7 +74,7 @@ def common_options(f):
             "-c",
             help="Consider the chromosome(s) as circular. By default consider them as linear.",
             is_flag=True,
-        )
+        ),
     ]
     return functools.reduce(lambda x, opt: opt(x), options, f)
 
@@ -92,12 +93,20 @@ def split_commas(arg: str) -> List[str]:
 @click.argument("bam", type=click.Path(exists=True))
 @click.help_option()
 def covhist_cmd(
-    bam, out, res, bins, skip, name, blacklist, whitelist, max_depth, no_filter, circular,
+    bam,
+    out,
+    res,
+    bins,
+    skip,
+    name,
+    blacklist,
+    whitelist,
+    max_depth,
+    no_filter,
+    circular,
 ):
     """Visualise the histogram of coverage in rolling windows."""
-    click.echo(
-        "Visualise read coverage histogram in rolling windows from a bam file."
-    )
+    click.echo("Visualise read coverage histogram in rolling windows from a bam file.")
 
     tc.covhist(
         bam,

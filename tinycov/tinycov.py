@@ -77,16 +77,12 @@ def covplot(
     chromlist = []
     genome_len = sum(list(bam_handle.lengths))
     scale, suffix = tu.get_bp_scale(genome_len)
-    chromlist = tu.process_chromlist(
-        bam_handle, black=blacklist, white=whitelist
-    )
+    chromlist = tu.process_chromlist(bam_handle, black=blacklist, white=whitelist)
     all_depths = []
     if bins is not None:
         # Cannot skip windows if using custom binning
         skip = 1
-        bins = pd.read_csv(
-            bins, sep="\t", header=None, names=["chrom", "start", "end"]
-        )
+        bins = pd.read_csv(bins, sep="\t", header=None, names=["chrom", "start", "end"])
     if text:
         text_out = open(text, "w")
     with sns.color_palette("husl", bam_handle.nreferences):
@@ -113,7 +109,12 @@ def covplot(
                 chrom_bins = bins.loc[bins.chrom == chrom, :]
                 chrom_bins["depth"] = coverage
                 centers = (chrom_bins.start + chrom_bins.end) / 2
-            plt.scatter((centers + offset[chrom_id]) / scale, coverage, marker=".", edgecolors='none')
+            plt.scatter(
+                (centers + offset[chrom_id]) / scale,
+                coverage,
+                marker=".",
+                edgecolors="none",
+            )
             # Write data as text, if requested
             if text:
                 if bins is None:
@@ -162,9 +163,7 @@ def covplot(
             else:
                 lw = 1
                 color = "grey"
-            plt.axhline(
-                y=cov[0], label=aneup, ls=cov[1], lw=lw, color=color, alpha=0.5
-            )
+            plt.axhline(y=cov[0], label=aneup, ls=cov[1], lw=lw, color=color, alpha=0.5)
         plt.legend()
     plt.xlabel("Genomic position [%s]" % suffix)
     # plt.legend()
@@ -238,17 +237,13 @@ def covhist(
     # Reload processed BAM file
     bam_handle = ps.AlignmentFile(processed_bam)
     chromlist = []
-    chromlist = tu.process_chromlist(
-        bam_handle, black=blacklist, white=whitelist
-    )
+    chromlist = tu.process_chromlist(bam_handle, black=blacklist, white=whitelist)
     all_depths = []
     all_chroms = []
     if bins is not None:
         # Cannot skip windows if using custom binning
         skip = 1
-        bins = pd.read_csv(
-            bins, sep="\t", header=None, names=["chrom", "start", "end"]
-        )
+        bins = pd.read_csv(bins, sep="\t", header=None, names=["chrom", "start", "end"])
     for chrom, _, counts in tu.parse_bam(
         bam_handle,
         chromlist,
@@ -283,9 +278,7 @@ def covhist(
     g = (
         g.map(plt.hist, "depth", color="c", bins=hist_bins)
         .set_titles("{col_name}")
-        .set_axis_labels(
-            "coverage (%s averaged)" % res_str, "Number of windows"
-        )
+        .set_axis_labels("coverage (%s averaged)" % res_str, "Number of windows")
     )
     if name is None:
         name = os.path.splitext(os.path.basename(bam))[0]
