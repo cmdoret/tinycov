@@ -16,6 +16,7 @@ RUN conda config --add channels bioconda
 
 # Get 3rd party packages directly from conda
 RUN conda install -c conda-forge -y \
+    pip \
     samtools \
     htslib \
     pysam
@@ -23,5 +24,4 @@ RUN conda install -c conda-forge -y \
 RUN pip install -Ur requirements.txt
 # Using pip:
 RUN pip install .
-#CMD ["python3", "-m", "hicstuff.main"]
 ENTRYPOINT [ "tinycov" ]
