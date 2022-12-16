@@ -106,8 +106,8 @@ def covplot(
                     coverage = coverage[tronc:-tronc]
                     centers = centers[tronc:-tronc]
             else:
-                chrom_bins = bins.loc[bins.chrom == chrom, :]
-                chrom_bins["depth"] = coverage
+                chrom_bins = bins.loc[bins.chrom == chrom, :].copy()
+                chrom_bins.loc[:, "depth"] = coverage
                 centers = (chrom_bins.start + chrom_bins.end) / 2
             plt.scatter(
                 (centers + offset[chrom_id]) / scale,

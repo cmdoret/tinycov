@@ -233,7 +233,7 @@ def aneuploidy_thresh(
     """
 
     med = np.nanmedian(depths)
-    cn_values = np.array(range(1, (2 * ploidy) + 1), dtype=np.float)
+    cn_values = np.array(range(1, (2 * ploidy) + 1), dtype=float)
     cov_mult = cn_values / ploidy
     ltypes = ["-", "--", "-.", ":"]
     cn_cov = {
