@@ -106,7 +106,9 @@ def covhist_cmd(
     circular,
 ):
     """Visualise the histogram of coverage in rolling windows."""
-    click.echo("Visualise read coverage histogram in rolling windows from a bam file.")
+    click.echo(
+        "Visualise read coverage histogram in rolling windows from a bam file."
+    )
 
     tc.covhist(
         bam,
@@ -156,6 +158,7 @@ def covplot_cmd(
 ):
     """Visualise coverage in rolling windows, optionally save results to a bedgraph file."""
     click.echo("Visualise read coverage in rolling windows from a bam file.")
+
     tc.covplot(
         bam,
         out=out,

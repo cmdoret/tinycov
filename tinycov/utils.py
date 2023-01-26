@@ -2,7 +2,16 @@
 # 20200206, cmdoret
 # pylint: disable=E1101
 import pathlib
-from typing import Optional, Iterable, List, Tuple, Dict, Generator, Union
+from typing import (
+    Optional,
+    Iterable,
+    Iterator,
+    List,
+    Tuple,
+    Dict,
+    Generator,
+    Union,
+)
 
 from colorama import Fore
 import numpy as np
@@ -11,44 +20,28 @@ import pysam as ps
 from tqdm import tqdm
 
 
-def process_chromlist(
-    bam: ps.AlignmentFile,
-    white: Optional[Iterable[str]] = None,
-    black: Optional[Iterable[str]] = None,
-) -> List[str]:
-    """
-    Given a bam handle, a chromosome blacklist and whitelist, define which
-    chromosomes should be treated.
+def filter_chroms(
+    chromlist: Iterable[str],
+    drop: Optional[Iterable[str]] = None,
+    keep: Optional[Iterable[str]] = None,
+) -> Iterator[str]:
+    """Filter input chromosomes by removing those in drop or keeping only those in keep.
 
     Parameters
     ----------
-    bam : pysam.AlignmentFile
-        The handle to the sam file containing the chromosomes information
-    white : list of strs or None
-        List of chromosomes to include in analyses. Unless None, all others
-        will be dropped.
-    black : list of strs or None
-        List of chromosomes to exclude from analyses.
+    chroms:
+        Chromosome names
+    drop:
+        Names of chromosomes to filter out
 
-    Returns
-    -------
-    chroms : list of strs
-        Chromosomes to be analysed.
     """
-    # Require a list of strings
-    for chrom_list in [white, black]:
-        if not (isinstance(chrom_list, list) or chrom_list is None):
-            raise ValueError("white and black must be lists of strings.")
-
-    if white is None:
-        chroms = list(bam.references)
-        if black is not None:
-            for chrom in black:
-                chroms.remove(chrom)
-    else:
-        chroms = white
-
-    return chroms
+    if drop and keep:
+        raise ValueError("Either keep or drop must be set, not both.")
+    if drop:
+        return filter(lambda c: c not in drop, chromlist)
+    if keep:
+        return filter(lambda c: c in chromlist, keep)
+    return (c for c in chromlist)
 
 
 def check_gen_sort_index(bam: ps.AlignmentFile, cores: int = 4) -> str:
@@ -88,7 +81,9 @@ def check_gen_sort_index(bam: ps.AlignmentFile, cores: int = 4) -> str:
         if not check_bam_sorted(bam_path):
             sorted_bam = str(bam_path.with_suffix(".sorted.bam"))
             print("Saving a coordinate-sorted BAM file as ", sorted_bam)
-            ps.sort(str(bam_path), "-O", "BAM", "-@", str(cores), "-o", sorted_bam)
+            ps.sort(
+                str(bam_path), "-O", "BAM", "-@", str(cores), "-o", sorted_bam
+            )
         else:
             sorted_bam = str(bam_path)
         # Index the sorted BAM file (input file if it was sorted)
@@ -129,87 +124,12 @@ def get_bp_scale(size: int) -> Tuple[int, str]:
     genome_len_pow = int(np.log10(size))
     # Get the closest valid power below genome size
     sorted_pows = sorted(pow_to_suffix.keys())
-    valid_pow_idx = max(0, np.searchsorted(sorted_pows, genome_len_pow) - 1)
+    valid_pow_idx = max(0, np.searchsorted(sorted_pows, genome_len_pow) - 1)  # type: ignore
     genome_valid_pow = sorted_pows[valid_pow_idx]
     # Convert power to scale and associated suffix
     suffix = pow_to_suffix[genome_valid_pow]
-    scale = 10 ** genome_valid_pow
+    scale = 10**genome_valid_pow
     return scale, suffix
-
-
-def parse_bam(
-    bam: ps.AlignmentFile,
-    chromlist: Iterable[str],
-    res: int,
-    bins: Optional[pd.DataFrame] = None,
-    max_depth: int = 100000,
-    no_filter: bool = False,
-    circular: bool = False,
-) -> Generator[Tuple[str, int, pd.DataFrame], None, None]:
-    """
-    Parse input indexed, coordinate-sorted bam file and yield chromosomes
-    one by one along with a rolling window mean of coverage.
-
-    Parameters
-    ----------
-    bam : pysam.AlignmentFile
-        A pysam file handle to an alignment file.
-    chromlist : list of str
-        A list of chromosome names to include in the analysis.
-    res : int
-        Number of bases to include in each window.
-    bins : pandas.DataFrame, optional
-        Predefined window segmentation in the case of variable-size windows.
-        Will override res if used. The dataframe should have columns: "chrom",
-        "start" and "end"
-    no_filter : bool
-        Do not filter out PCR duplicates and secondary alignments (use all reads).
-    max_depth : int
-        Maximum read depth allowed. Positions above this value will be set to it.
-
-    Returns
-    -------
-    generator of str, int, pandas.DataFrame
-        For each element in the generator, there are 3 values: The chromosome
-        name, its length and an array of rolling coverage values.
-    """
-    stepper = "nofilter" if no_filter else "all"
-    for chromo, length in tqdm(
-        zip(bam.references, bam.lengths),
-        total=len(bam.references),
-        desc="chromosome",
-        bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.BLUE, Fore.RESET),
-    ):
-        if chromo in chromlist:
-            depths = np.zeros(length + 1)
-            for base in tqdm(
-                bam.pileup(chromo, stepper=stepper, max_depth=max_depth),
-                total=len(depths),
-                desc="basepair",
-                bar_format="{l_bar}%s{bar}%s{r_bar}" % (Fore.BLUE, Fore.RESET),
-            ):
-                try:
-                    depths[base.reference_pos] += base.nsegments
-                except AttributeError:
-                    depths[base.pos] += len(base.pileups)
-            df = pd.DataFrame(depths, index=np.arange(length + 1), columns=["depth"])
-            # If resolution is fixed, use pandas's method for rolling windows
-            if bins is None:
-                # extend dataframe to compute rolling window on a pseudo
-                # circular array.
-                if circular:
-                    yield chromo, length, pd.concat(
-                        [df.iloc[len(df) - res :, :], df, df.iloc[:res, :]]
-                    ).rolling(window=res, center=True).mean()
-                else:
-                    yield chromo, length, df.rolling(window=res, center=True).mean()
-            # If using a custom binning, compute each window independently
-            else:
-                chrom_bins = bins.loc[bins.chrom == chromo, :]
-                wins = np.zeros(chrom_bins.shape[0])
-                for i, (s, e) in enumerate(zip(chrom_bins.start, chrom_bins.end)):
-                    wins[i] = df.depth[s:e].mean()
-                yield chromo, length, pd.DataFrame(wins)
 
 
 def aneuploidy_thresh(
@@ -237,7 +157,10 @@ def aneuploidy_thresh(
     cov_mult = cn_values / ploidy
     ltypes = ["-", "--", "-.", ":"]
     cn_cov = {
-        "{p}N".format(p=int(cn_values[i])): [med * mult, ltypes[i % len(ltypes)],]
+        "{p}N".format(p=int(cn_values[i])): [
+            med * mult,
+            ltypes[i % len(ltypes)],
+        ]
         for i, mult in enumerate(cov_mult)
     }
     return cn_cov
