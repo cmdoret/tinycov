@@ -97,6 +97,7 @@ def covplot(
             no_filter=no_filter,
             circular=circular,
         ):
+            max_count=max_depth
             coverage = counts[counts.columns[0]].values[::skip]
             if bins is None:
                 centers = counts.index.values[::skip]
@@ -136,7 +137,7 @@ def covplot(
             lowest = np.min(counts.iloc[::skip, 0])
             if lowest < min_count:
                 min_count = lowest
-            if highest > max_count:
+            if highest < max_count:
                 max_count = highest
 
             plt.axvline(offset[chrom_id] / scale)
